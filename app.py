@@ -224,7 +224,7 @@ def generate_map():
             border-radius: 5px;
             box-shadow: 0 0 5px rgba(0,0,0,0.5);
         }
-        .leaflet-interactive{
+        .pressure-labels{
         cursor: grab;
         }
     </style>
@@ -235,7 +235,7 @@ def generate_map():
         var map = window.map_id 
         console.log(map)                                                       
         function onMarkerClick(code) {
-            fetch("http://127.0.0.1:8000/generate_svg?code=" + code)
+            fetch("http://127.0.0.1:5000/generate_svg?code=" + code)
                 .then(response => response.text())
                 .then(data => {
                     console.log(data)
