@@ -235,7 +235,7 @@ def generate_map():
         var map = window.map_id 
         console.log(map)                                                       
         function onMarkerClick(code) {
-            fetch("http://127.0.0.1:8000/generate_svg?code=" + code)
+            fetch("https://web-production-0fbe.up.railway.app/generate_svg?code=" + code)
                 .then(response => response.text())
                 .then(data => {
                     console.log(data)
