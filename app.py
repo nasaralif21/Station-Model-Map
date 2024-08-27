@@ -1,17 +1,16 @@
+from metpy.plots import StationPlot, sky_cover,current_weather, pressure_tendency as pt_symbols
 from flask import Flask, request, render_template,jsonify
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
 from matplotlib.backends.backend_svg import FigureCanvasSVG
-from metpy.units import units
-from metpy.calc import wind_components
-from metpy.plots import StationPlot, sky_cover
-from metpy.plots import StationPlot, sky_cover, current_weather, pressure_tendency as pt_symbols
-from scipy.spatial import cKDTree
 from folium import GeoJson, Marker, DivIcon
 from folium.plugins import MarkerCluster
-import scipy as sp
+from metpy.calc import wind_components
+from scipy.spatial import cKDTree
+import matplotlib.pyplot as plt
+from metpy.units import units
 import json,os,random,folium,io
+import pandas as pd
+import numpy as np
+import scipy as sp
 
 # Use the Agg backend for Matplotlib
 import matplotlib
