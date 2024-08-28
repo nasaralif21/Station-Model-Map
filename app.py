@@ -1,16 +1,18 @@
-from metpy.plots import StationPlot, sky_cover,current_weather, pressure_tendency as pt_symbols
 from flask import Flask, request, render_template,jsonify
-from matplotlib.backends.backend_svg import FigureCanvasSVG
-from folium import GeoJson, Marker, DivIcon
-from folium.plugins import MarkerCluster
-from metpy.calc import wind_components
-from scipy.spatial import cKDTree
-import matplotlib.pyplot as plt
-from metpy.units import units
-import json,os,random,folium,io
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_svg import FigureCanvasSVG
+from metpy.units import units
+from metpy.calc import wind_components
+from metpy.plots import StationPlot, sky_cover
+from metpy.plots import StationPlot, sky_cover, current_weather, pressure_tendency as pt_symbols
+from scipy.spatial import cKDTree
+from folium import GeoJson, Marker, DivIcon
+from folium.plugins import MarkerCluster
 import scipy as sp
+import json,os,random,folium,io
+from mpl_toolkits.basemap import maskoceans
 
 # Use the Agg backend for Matplotlib
 import matplotlib
@@ -159,7 +161,7 @@ def generate_map():
             
             popup_html = (
         '<div>'
-        + '<b>Station (' + str(lat) + ', ' + str(lon) + ')</b><br>'
+        + '<b>Station (' + '{:.3f}'.format(lat) + ', ' + '{:.3f}'.format(lon) + ')</b><br>'
         + 'Temp: ' + '{:.1f}'.format(temp) + '&deg;C<br>'
         + 'Dew Point: ' + '{:.1f}'.format(dew) + '&deg;C<br>'
         + 'Wind: ' + '{:.1f}'.format(speed) + ' knots<br>'
@@ -227,22 +229,29 @@ def generate_map():
         .pressure-labels{
         cursor: grab;
         }
+        .svg-container {
+        max-width: 100%;
+        
+    }
+    .svg-container svg {
+        width:auto;
+        height: auto;
+    }
     </style>
     """))
 
     m.get_root().html.add_child(folium.Element("""
     <script>
-        var map = window.map_id 
-        console.log(map)                                                       
+                                                             
         function onMarkerClick(code) {
-            fetch("https://web-production-0fbe.up.railway.app/generate_svg?code=" + code)
+            fetch("http://127.0.0.1:5000/generate_svg?code=" + code)
                 .then(response => response.text())
                 .then(data => {
                     console.log(data)
                     var element = document.getElementById("model"+code );
                     console.log(element)  
                     if (element) {
-                        element.innerHTML = data;
+                         element.innerHTML = `<div class="svg-container">${data}</div>`;
                     } else {
                         console.error("Element not found: station-model-" + code);
                     }
@@ -250,7 +259,8 @@ def generate_map():
         }
         
     document.addEventListener('DOMContentLoaded', function() {
-        
+        var map = window.map_id 
+        console.log(map)    
         // Function to fetch and display SVG for the selected station
         function fetchSVG(lat, lon) {
             fetch("http://127.0.0.1:5000/get_station_data?lat=" + lat + "&lon=" + lon)
@@ -265,7 +275,7 @@ def generate_map():
         timestampSelector.className = 'timestamp-selector';
         timestampSelector.innerHTML = '<option value="2023050315">2023-05-03 15:00</option>';
         document.body.appendChild(timestampSelector);
-    });
+        
         function adjustLabelSize() {
         var labels = document.getElementsByClassName('pressure-labels');
         for (var i = 0; i < labels.length; i++) {
@@ -274,7 +284,9 @@ def generate_map():
     }
 
         map.on('zoomend', adjustLabelSize);
-        document.addEventListener('DOMContentLoaded', adjustLabelSize);
+        document.addEventListener('DOMContentLoaded', adjustLabelSize);                                       
+    });
+        
     </script>
     """))
 
@@ -287,8 +299,10 @@ def generate_map():
     pressure_grid = pressure_grid_flat.reshape(lat_grid.shape)
 
     pressure_grid = sp.ndimage.gaussian_filter(pressure_grid, sigma=3)
+    
+    pressure_grid_masked = maskoceans(lon_grid, lat_grid, pressure_grid)
 
-    contours = plt.contour(lon_grid, lat_grid, pressure_grid, levels=20)
+    contours = plt.contour(lon_grid, lat_grid, pressure_grid_masked, levels=20)
 
     contour_geojson = contours_to_geojson(contours)
 
@@ -369,9 +383,6 @@ def generate_svg():
     fig = plt.figure(figsize=(3, 3), dpi=300)
     ax = fig.add_subplot(1, 1, 1)
 
-    # Turn off the x-axis and y-axis
-    ax.axis('off')
-    
     station_plot = StationPlot(ax, lon, lat, fontsize=15, spacing=25)
 
     # Plot temperature if available
