@@ -82,7 +82,7 @@ def style_function(feature):
 
 # Load the CSV data
 try:
-    data_file = '2023050315.csv'
+    data_file = "E:/Synop Data/Decoded_Data/2024082903.csv"
     data = pd.read_csv(data_file)
 except FileNotFoundError:
     print("File not found.")
@@ -101,6 +101,7 @@ def generate_map():
     pressure = data['pressure_sea_level'].values
     stations=data['Station_Name'].values
     codes=data['WMO'].values.astype(int)
+    precep=data['precipitation24H'].values
 
     valid_indices = ~np.isnan(air_temp)
     valid_indices1 = ~np.isnan(pressure)
@@ -143,7 +144,7 @@ def generate_map():
                 break
     
         return f"""
-        <div class="icon-container" style="color: white; background-color: {color}; display: flex; align-items: center; justify-content: center; padding: 2px; border-radius: 5px; width: 45px;">
+        <div class="icon-container" style="background-color: {color};">
             <div style="font-size: 12px; margin-left: 5px;">{temp}&deg;</div>
         </div>
         """
@@ -155,7 +156,7 @@ def generate_map():
     marker_cluster = MarkerCluster(name="Wind Data").add_to(m)
 
 # Add stations to the cluster
-    for lat, lon, speed, angle, temp, dew, cloud,station,code in zip(lats, lons, wind_speed, wind_dir, air_temp, dew_point, cloud_cover,stations,codes):
+    for lat, lon, speed, angle, temp, dew, cloud,station,code,pre in zip(lats, lons, wind_speed, wind_dir, air_temp, dew_point, cloud_cover,stations,codes,precep):
         if not np.isnan(temp):
             icon_html = create_temp_icon(temp)
             
@@ -163,6 +164,7 @@ def generate_map():
         '<div>'
         + '<b>Station (' + '{:.3f}'.format(lat) + ', ' + '{:.3f}'.format(lon) + ')</b><br>'
         + 'Temp: ' + '{:.1f}'.format(temp) + '&deg;C<br>'
+        + 'Rain: ' + '{:.1f}'.format(pre) + 'mm<br>'
         + 'Dew Point: ' + '{:.1f}'.format(dew) + '&deg;C<br>'
         + 'Wind: ' + '{:.1f}'.format(speed) + ' knots<br>'
         + '<button onclick="onMarkerClick(' + str(code) + ')" id="show-model-' + str(code) + '">Show Station Model</button>'
@@ -176,119 +178,9 @@ def generate_map():
                 icon=folium.DivIcon(html=icon_html),
                 popup=folium.Popup(folium.Html(popup_html, script=True), max_width=800),
                 tooltip=station
-            ).add_to(marker_cluster)
-    m.get_root().html.add_child(folium.Element("""
-    <style>
-        .marker-cluster {
-            display: none !important;
-        }
-        .icon-container {
-            position: relative;
-            display: inline-block;
-        }
-        .icon-container:hover .popup {
-            visibility: visible;
-            opacity: 1;
-        }
-        .popup {
-            visibility: hidden;
-            opacity: 0;
-            width: 120px;
-            background-color: black;
-            color: white;
-            text-align: center;
-            border-radius: 6px;
-            padding: 5px;
-            position: absolute;
-            z-index: 1;
-            bottom: 125%;
-            left: 50%;
-            margin-left: -60px;
-            transition: opacity 0.3s;
-        }
-        .popup::after {
-            content: "";
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            margin-left: -5px;
-            border-width: 5px;
-            border-style: solid;
-            border-color: black transparent transparent transparent;
-        }
-        .timestamp-selector {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            z-index: 1000;
-            background: white;
-            padding: 5px;
-            border-radius: 5px;
-            box-shadow: 0 0 5px rgba(0,0,0,0.5);
-        }
-        .pressure-labels{
-        cursor: grab;
-        }
-        .svg-container {
-        max-width: 100%;
-        
-    }
-    .svg-container svg {
-        width:auto;
-        height: auto;
-    }
-    </style>
-    """))
+            ).add_to(m)
 
-    m.get_root().html.add_child(folium.Element("""
-    <script>
-                                                             
-        function onMarkerClick(code) {
-            fetch("https://web-production-7bb07.up.railway.app/generate_svg?code=" + code)
-                .then(response => response.text())
-                .then(data => {
-                    console.log(data)
-                    var element = document.getElementById("model"+code );
-                    console.log(element)  
-                    if (element) {
-                         element.innerHTML = `<div class="svg-container">${data}</div>`;
-                    } else {
-                        console.error("Element not found: station-model-" + code);
-                    }
-                });
-        }
-        
-    document.addEventListener('DOMContentLoaded', function() {
-        var map = window.map_id 
-        console.log(map)    
-        // Function to fetch and display SVG for the selected station
-        function fetchSVG(lat, lon) {
-            fetch("http://127.0.0.1:5000/get_station_data?lat=" + lat + "&lon=" + lon)
-                .then(response => response.text())
-                .then(data => {
-                    document.getElementById("station-model-" + lat + "-" + lon).innerHTML = data;
-                });
-        }
-        
-        // Create timestamp selector
-        var timestampSelector = document.createElement('select');
-        timestampSelector.className = 'timestamp-selector';
-        timestampSelector.innerHTML = '<option value="2023050315">2023-05-03 15:00</option>';
-        document.body.appendChild(timestampSelector);
-        
-        function adjustLabelSize() {
-        var labels = document.getElementsByClassName('pressure-labels');
-        for (var i = 0; i < labels.length; i++) {
-            labels[i].style.fontSize = '12px'; // Set a fixed font size
-        }
-    }
 
-        map.on('zoomend', adjustLabelSize);
-        document.addEventListener('DOMContentLoaded', adjustLabelSize);                                       
-    });
-        
-    </script>
-    """))
 
     lat_arr = np.linspace(valid_lats.min(), valid_lats.max(), 500)
     lon_arr = np.linspace(valid_lons.min(), valid_lons.max(), 500)
@@ -339,11 +231,11 @@ def generate_map():
 
 @app.route("/")
 def home():
-    template_path = "./templates/interactive_map.html"
-    if not os.path.exists(template_path):
-        print("No file avaialbale")
-        generate_map()
-    return render_template("interactive_map.html")
+    # template_path = "./templates/interactive_map.html"
+    # if not os.path.exists(template_path):
+    #     print("No file avaialbale")
+    #     generate_map()
+    return render_template("2024083000.html")
 
 @app.route('/generate_svg', methods=['GET'])
 def generate_svg():
