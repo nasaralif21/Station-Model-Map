@@ -232,10 +232,10 @@ def generate_map():
 
 @app.route("/")
 def home():
-    template_path = "./templates/interactive_map.html"
-    if not os.path.exists(template_path):
-        print("No file avaialbale")
-        generate_map()
+    # template_path = "./templates/interactive_map.html"
+    # if not os.path.exists(template_path):
+    #     print("No file avaialbale")
+    #     generate_map()
     return render_template("interactive_map.html")
 
 @app.route('/generate_svg', methods=['GET'])
