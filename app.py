@@ -13,6 +13,7 @@ from folium.plugins import MarkerCluster
 import scipy as sp
 import json,os,random,folium,io
 from mpl_toolkits.basemap import maskoceans
+from datetime import datetime, timezone
 
 # Use the Agg backend for Matplotlib
 import matplotlib
@@ -339,6 +340,8 @@ def generate_map():
 
 @app.route("/")
 def home():
+    now = datetime.now(timezone.utc)
+    print(now)
     template_path = "./templates/interactive_map.html"
     if not os.path.exists(template_path):
         print("No file avaialbale")
