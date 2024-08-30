@@ -236,7 +236,7 @@ def home():
     # if not os.path.exists(template_path):
     #     print("No file avaialbale")
     #     generate_map()
-    return render_template("interactive_map.html")
+    return render_template("2024083000.html")
 
 @app.route('/generate_svg', methods=['GET'])
 def generate_svg():
