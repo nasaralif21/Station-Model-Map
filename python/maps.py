@@ -78,7 +78,7 @@ def read_data(time_stamp):
 
 def generate_map(time_stamp):
     data=read_data(time_stamp)
-
+    data = data.drop_duplicates(subset='station_id')
     print("Generating maps")
     lats = data['Latitude'].values
     lons = data['Longitude'].values
