@@ -20,8 +20,7 @@ def download_file(timestamp):
         with open(filename, 'wb') as file:
             file.write(response.content)
         print(f"File saved as {filename}")
+        return True
     else:
         print(f"Failed to download the file. Status code: {response.status_code}")
-
-if __name__ == "__main__":
-    download_file()
+        return False
