@@ -28,7 +28,7 @@ document.body.appendChild(timestampSelector);
 
 var currentTimestamp = window.location.pathname.split("/").pop();
 
-fetch("https://web-production-7bb07.up.railway.app//list_html_files")
+fetch("https://web-production-7bb07.up.railway.app/list_html_files")
   .then((response) => response.json())
   .then((htmlFiles) => {
     htmlFiles.forEach((file) => {
@@ -45,5 +45,5 @@ fetch("https://web-production-7bb07.up.railway.app//list_html_files")
 
 timestampSelector.addEventListener("change", function () {
   var selectedTimestamp = this.value;
-  window.location.href = `https://web-production-7bb07.up.railway.app//${selectedTimestamp}`;
+  window.location.href = `https://web-production-7bb07.up.railway.app/${selectedTimestamp}`;
 });
