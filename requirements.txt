@@ -29,6 +29,7 @@ pillow==10.4.0
 Pint==0.24.3
 platformdirs==4.2.2
 pooch==1.8.2
+pymetdecoder==0.1.4
 pyparsing==3.1.4
 pyproj==3.6.1
 pyshp==2.3.1
