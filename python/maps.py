@@ -143,7 +143,7 @@ def generate_map(time_stamp):
 
     marker_cluster = MarkerCluster(name="Wind Data").add_to(m)
 
-    for lat, lon, speed, angle, temp, dew, cloud, station, code, pre in zip(lats, lons, wind_speed, wind_dir, valid_temps, dew_point, cloud_cover, stations, codes, precep):
+    for lat, lon, speed, angle, temp, dew, cloud, station, code, pre in zip(lats, lons, wind_speed, wind_dir, air_temp, dew_point, cloud_cover, stations, codes, precep):
         if not np.isnan(temp):
             icon_html = create_temp_icon(temp)
             popup_html = (
