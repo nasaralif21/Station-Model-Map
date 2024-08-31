@@ -1,0 +1,23 @@
+{
+  "build": {
+    "builder": "Nixpacks",
+    "buildCommand": "pip install -r requirements.txt"
+  },
+  "services": [
+    {
+      "name": "web",
+      "startCommand": "gunicorn app:app",
+      "env": {
+        "FLASK_ENV": "production"
+      },
+      "port": 8000
+    },
+    {
+      "name": "python-task",
+      "startCommand": "python python/main.py",
+      "env": {
+        "FLASK_ENV": "production"
+      }
+    }
+  ]
+}
