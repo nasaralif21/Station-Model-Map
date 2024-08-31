@@ -43,7 +43,7 @@
        transition: opacity 0.3s;
    }
  .marker-cluster {
-     display: none !important;
+     display: block !important;
  }
  
  .icon-container {
@@ -67,7 +67,7 @@
  }
  .timestamp-selector {
      position: absolute;
-     top: 10px;
+     top: 100px;
      left: 10px;
      z-index: 1000;
      background: white;
