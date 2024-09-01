@@ -20,7 +20,7 @@ shared_storage_path = os.getenv('SHARED_STORAGE_PATH', '/data/shared')
 
 # Set the path to the templates directory within the shared storage
 template_folder_path = os.path.join(shared_storage_path, 'templates')
-
+print(template_folder_path)
 # Initialize the Flask app with the custom template folder
 app = Flask(__name__, template_folder=template_folder_path)
 # app = Flask(__name__,template_folder="templates")
@@ -69,7 +69,7 @@ def home():
 
 @app.route('/list_html_files')
 def list_html_files():
-    template_dir = os.path.join(app.root_path, 'templates')
+    template_dir = os.path.join(shared_storage_path, 'templates')
     print(template_dir)
     html_files = [f for f in os.listdir(template_dir) if f.endswith('.html')]
     return jsonify(html_files)
