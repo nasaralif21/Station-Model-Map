@@ -213,7 +213,9 @@ def generate_map(time_stamp):
     ).add_to(m)
 
     try:
-        m.save(f"./templates/{time_stamp}.html")
+        file_path = f"./templates/{time_stamp}.html"
+        m.save(file_path)
         print("Map saved successfully.")
+        print("File path:", file_path)
     except Exception as e:
         print(f"Error saving map: {e}")
