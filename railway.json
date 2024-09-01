@@ -1,22 +1,61 @@
 {
-  "build": {
-    "builder": "Nixpacks",
-    "buildCommand": "pip install -r requirements.txt"
-  },
   "services": [
     {
-      "name": "web",
-      "startCommand": "gunicorn app:app",
-      "env": {
-        "FLASK_ENV": "production"
+      "name": "flask-service",
+      "source": {
+        "type": "github",
+        "repo": "https://github.com/nasarali03/Station-Model-Map",
+        "dir": "."
       },
-      "port": 8000
+      "build": {
+        "env": {
+          "PYTHON_VERSION": "3.12"
+        }
+      },
+      "deploy": {
+        "startCommand": "python app.py",
+        "env": {
+          "SHARED_STORAGE_PATH": "/data/shared"
+        },
+        "volumes": [
+          {
+            "name": "shared-data",
+            "mountPath": "/data/shared"
+          }
+        ],
+        "resources": {
+          "cpu": "shared",
+          "memory": "512"
+        }
+      }
     },
     {
-      "name": "python-task",
-      "startCommand": "python python/main.py",
-      "env": {
-        "FLASK_ENV": "production"
+      "name": "downloader-service",
+      "source": {
+        "type": "github",
+        "repo": "https://github.com/nasarali03/Station-Model-Map",
+        "dir": "python"
+      },
+      "build": {
+        "env": {
+          "PYTHON_VERSION": "3.9"
+        }
+      },
+      "deploy": {
+        "startCommand": "python main.py",
+        "env": {
+          "SHARED_STORAGE_PATH": "/data/shared"
+        },
+        "volumes": [
+          {
+            "name": "shared-data",
+            "mountPath": "/data/shared"
+          }
+        ],
+        "resources": {
+          "cpu": "shared",
+          "memory": "512"
+        }
       }
     }
   ]
