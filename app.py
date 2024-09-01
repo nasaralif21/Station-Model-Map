@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 import matplotlib
 matplotlib.use('Agg')
 
-app = Flask(__name__,template_folder="app/templates")
+app = Flask(__name__)
 
 def idw_interpolation(x, y, z, xi, yi, power=3, chunk_size=10000):
     tree = cKDTree(np.c_[x, y])
