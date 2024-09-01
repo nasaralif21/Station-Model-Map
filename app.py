@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 import matplotlib
 matplotlib.use('Agg')
 
-app = Flask(__name__)
+app = Flask(__name__,template_folder="templates")
 
 def idw_interpolation(x, y, z, xi, yi, power=3, chunk_size=10000):
     tree = cKDTree(np.c_[x, y])
@@ -32,7 +32,12 @@ def idw_interpolation(x, y, z, xi, yi, power=3, chunk_size=10000):
 
 def read_data(time_stamp):
     try:
-        data_file = f"Decoded_Data/{time_stamp}.csv"
+        # data_file = f"Decoded_Data/{time_stamp}.csv"
+        shared_storage_path = os.getenv('SHARED_STORAGE_PATH', '/data/shared')
+
+        # Construct the full path to the data file
+        data_file = os.path.join(shared_storage_path, "Decoded_Data", f"{time_stamp}.csv")
+
         data = pd.read_csv(data_file)
         return data
     except FileNotFoundError:
@@ -43,10 +48,11 @@ def read_data(time_stamp):
 
 @app.route("/")
 def home():
-    now = datetime.now(timezone.utc)
+    # now = datetime.now(timezone.utc)
 
     now = datetime.now(timezone.utc)
-    timestamp = now.strftime("%Y%m%d")
+    # timestamp = now.strftime("%Y%m%d")
+    timestamp="20240831"
     print(timestamp)
     
     return render_template(f"{timestamp}00.html")
@@ -149,50 +155,6 @@ def generate_svg():
     
     return svg_data
 
-
-# @app.route('/get_station_data', methods=['GET'])
-# def get_station_data():
-#     lat = float(request.args.get('lat'))
-#     lon = float(request.args.get('lon'))
-#     print(lat,lon)
-#     filtered_data = data.drop_duplicates(subset='station_id')
-    
-#     # Apply the same filtering for NaNs
-#     valid_indices_temp = ~np.isnan(filtered_data['air_temp'])
-#     valid_indices_pressure = ~np.isnan(filtered_data['pressure_station_level'])
-#     valid_indices_wind = ~np.isnan(filtered_data['wind_speed']) & ~np.isnan(filtered_data['wind_direction'])
-    
-#     valid_indices = valid_indices_temp & valid_indices_pressure & valid_indices_wind
-#     filtered_data = filtered_data[valid_indices]
-    
-#     # Find the closest station to the provided lat/lon
-#     distances = np.sqrt((filtered_data['Latitude'] - lat)**2 + (filtered_data['Longitude'] - lon)**2)
-#     closest_index = np.argmin(distances)
-#     closest_station = filtered_data.iloc[closest_index]
-
-#     # Find the closest station
-#     latitude=closest_station['Latitude']
-#     longitude=closest_station['Longitude']
-#     air_temp = closest_station['air_temp']
-#     dew_point = closest_station['dew_point']
-#     cloud_cover = closest_station['cloud_cover']
-#     pressure = closest_station['pressure_station_level']
-#     wind_speed = closest_station['wind_speed']
-#     wind_dir = closest_station['wind_direction']
-#     station_name = closest_station['Station_Name']
-    
-#     station_data = {
-#         'latitude': latitude,
-#         'longitude': longitude,
-#         'temperature': air_temp,
-#         'pressure': pressure,
-#         'dew_point': dew_point,
-#         'wind_speed': wind_speed,
-#         'wind_direction': wind_dir,
-#         'cloud_cover': cloud_cover
-#     }
-    
-#     return jsonify(station_data)
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -2,7 +2,7 @@ from download_synop import download_file
 from decoding import process_synop_files
 from maps import generate_map
 from datetime import datetime, timedelta, timezone
-import time
+import time,os
 
 def main():
     now = datetime.now(timezone.utc)
@@ -20,9 +20,12 @@ def main():
     if download_success:
         # Step 2: Run the decoding file
         print("Running decoding...")
-        station_codes_file = "static/WMO_stations_data.csv"
-        directory = 'Synop'
-        output_directory = "Decoded_Data"
+        station_codes_file = os.path.join(os.getenv('SHARED_STORAGE_PATH', '/data/shared'), "static", "WMO_stations_data.csv")
+        directory = os.path.join(os.getenv('SHARED_STORAGE_PATH', '/data/shared'), "Synop")
+        output_directory = os.path.join(os.getenv('SHARED_STORAGE_PATH', '/data/shared'), "Decoded_Data")
+        # station_codes_file = "static/WMO_stations_data.csv"
+        # directory = 'Synop'
+        # output_directory = "Decoded_Data"
         process_synop_files(station_codes_file, directory, output_directory, timestamp)
         
         print("Running maps...")

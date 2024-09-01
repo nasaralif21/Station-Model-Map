@@ -67,7 +67,12 @@ def style_function(feature):
 
 def read_data(time_stamp):
     try:
-        data_file = f"Decoded_Data/{time_stamp}.csv"
+        shared_storage_path = os.getenv('SHARED_STORAGE_PATH', '/data/shared')
+
+        # Construct the full path to the data file
+        data_file = os.path.join(shared_storage_path, "Decoded_Data", f"{time_stamp}.csv")
+
+        # data_file = f"Decoded_Data/{time_stamp}.csv"
         data = pd.read_csv(data_file)
         return data
     except FileNotFoundError:
@@ -213,7 +218,16 @@ def generate_map(time_stamp):
     ).add_to(m)
 
     try:
-        m.save(f"./templates/{time_stamp}.html")
+        shared_storage_path = os.getenv('SHARED_STORAGE_PATH', '/data/shared')
+        file_path = os.path.abspath(os.path.join(shared_storage_path, "templates", f"{time_stamp}.html"))
+
+        # Save the map to the constructed file path
+        m.save(file_path)
+        # file_path = os.path.abspath(f"templates/{time_stamp}.html")
+        # m.save(file_path)
         print("Map saved successfully.")
+        print("File path:", file_path)
     except Exception as e:
         print(f"Error saving map: {e}")
+
+# generate_map("2024090112")

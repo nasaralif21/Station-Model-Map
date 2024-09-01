@@ -569,8 +569,8 @@ def process_synop_files(station_codes_file, directory, output_directory,timestam
     else:
         print(f"File {filename} does not exist in the directory {directory}")
 
-station_codes_file = "E:/WMO/WMO_stations_data.csv"
-directory = 'Synop'
-output_directory = "Decoded_Data"
+# station_codes_file = "E:/WMO/WMO_stations_data.csv"
+# directory = 'Synop'
+# output_directory = "Decoded_Data"
 # process_synop_files(station_codes_file, directory, output_directory,"2024083006")
     

@@ -4,8 +4,11 @@ import requests
 def download_file(timestamp):
 
     url = f"http://www.pmdnmcc.net/RealTime/Data/{timestamp}syn.txt"
+    shared_storage_path = os.getenv('SHARED_STORAGE_PATH', '/data/shared')
 
-    directory = "Synop"
+    # Use the shared storage path for saving the file
+    directory = os.path.join(shared_storage_path, "Synop")
+    # directory = "Synop"
     if not os.path.exists(directory):
         os.makedirs(directory)
 
