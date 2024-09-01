@@ -16,7 +16,14 @@ from datetime import datetime, timezone
 import matplotlib
 matplotlib.use('Agg')
 
-app = Flask(__name__,template_folder="templates")
+shared_storage_path = os.getenv('SHARED_STORAGE_PATH', '/data/shared')
+
+# Set the path to the templates directory within the shared storage
+template_folder_path = os.path.join(shared_storage_path, 'templates')
+
+# Initialize the Flask app with the custom template folder
+app = Flask(__name__, template_folder=template_folder_path)
+# app = Flask(__name__,template_folder="templates")
 
 def idw_interpolation(x, y, z, xi, yi, power=3, chunk_size=10000):
     tree = cKDTree(np.c_[x, y])
