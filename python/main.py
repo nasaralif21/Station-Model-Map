@@ -9,8 +9,8 @@ def main():
     hour = now.hour
     print(hour)
     interval_start_hour = (hour // 3) * 3
-    timestamp = now.replace(hour=interval_start_hour, minute=0, second=0, microsecond=0).strftime("%Y%m%d%H")
-    
+    # timestamp = now.replace(hour=interval_start_hour, minute=0, second=0, microsecond=0).strftime("%Y%m%d%H")
+    timestamp = "2024083112"
     print(f"Timestamp: {timestamp}")
 
     
