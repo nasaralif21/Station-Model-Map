@@ -37,7 +37,7 @@ def read_data(time_stamp):
 
         # Construct the full path to the data file
         data_file = os.path.join(shared_storage_path, "Decoded_Data", f"{time_stamp}.csv")
-
+        print(data_file)
         data = pd.read_csv(data_file)
         return data
     except FileNotFoundError:
