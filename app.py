@@ -68,6 +68,8 @@ def get_timestamp_file():
 
 @app.route('/generate_svg', methods=['GET'])
 def generate_svg():
+    current_directory = os.getcwd()
+    print("Current Working Directory:", current_directory)
     station_id = request.args.get('code', type=int)
     time_stamp = request.args.get('timestamp', type=int)
     print(station_id)
