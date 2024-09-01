@@ -48,7 +48,8 @@ def home():
     now = datetime.now(timezone.utc)
     timestamp = now.strftime("%Y%m%d")
     print(timestamp)
-    
+    file_path = f"Decoded_Data/{timestamp}00.html"
+    print("File path in home method", file_path)
     return render_template(f"{timestamp}00.html")
 
 @app.route('/list_html_files')
