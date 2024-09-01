@@ -218,6 +218,7 @@ def generate_map(time_stamp):
     ).add_to(m)
 
     try:
+<<<<<<< HEAD
         shared_storage_path = os.getenv('SHARED_STORAGE_PATH', '/data/shared')
         file_path = os.path.abspath(os.path.join(shared_storage_path, "templates", f"{time_stamp}.html"))
 
@@ -225,6 +226,10 @@ def generate_map(time_stamp):
         m.save(file_path)
         # file_path = os.path.abspath(f"templates/{time_stamp}.html")
         # m.save(file_path)
+=======
+        file_path = os.path.abspath(f"./templates/{time_stamp}.html")
+        m.save(file_path)
+>>>>>>> c7072b53abc30a3faa74aafd73dc1fe847847c5e
         print("Map saved successfully.")
         print("File path:", file_path)
     except Exception as e:

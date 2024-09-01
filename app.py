@@ -54,12 +54,14 @@ def home():
     # timestamp = now.strftime("%Y%m%d")
     timestamp="20240831"
     print(timestamp)
-    
+    file_path = f"templates/{timestamp}00.html"
+    print("File path in home method", file_path)
     return render_template(f"{timestamp}00.html")
 
 @app.route('/list_html_files')
 def list_html_files():
     template_dir = os.path.join(app.root_path, 'templates')
+    print(template_dir)
     html_files = [f for f in os.listdir(template_dir) if f.endswith('.html')]
     return jsonify(html_files)
 
