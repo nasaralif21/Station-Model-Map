@@ -213,7 +213,7 @@ def generate_map(time_stamp):
     ).add_to(m)
 
     try:
-        file_path = f"./templates/{time_stamp}.html"
+        file_path = os.path.abspath(f"./templates/{time_stamp}.html")
         m.save(file_path)
         print("Map saved successfully.")
         print("File path:", file_path)
