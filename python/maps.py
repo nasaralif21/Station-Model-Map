@@ -219,11 +219,11 @@ def generate_map(time_stamp):
 
     try:
         shared_storage_path = os.getenv('SHARED_STORAGE_PATH', '/data/shared')
-        file_path = os.path.abspath(os.path.join(shared_storage_path, "templates", f"{time_stamp}.html"))
-        if not os.path.exists(file_path):
-            os.makedirs(file_path)
-        # Save the map to the constructed file path
-        m.save(file_path)
+        template_dir_path = os.path.join(shared_storage_path, "templates")
+        if not os.path.exists(template_dir_path):
+            os.makedirs(template_dir_path)
+
+        file_path = os.path.join(template_dir_path, f"{time_stamp}.html")
         # file_path = os.path.abspath(f"templates/{time_stamp}.html")
         # m.save(file_path)
         print("Map saved successfully.")
