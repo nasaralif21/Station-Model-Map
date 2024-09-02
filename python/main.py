@@ -9,8 +9,8 @@ def main():
     hour = now.hour
     print(hour)
     interval_start_hour = (hour // 3) * 3
-    # timestamp = now.replace(hour=interval_start_hour, minute=0, second=0, microsecond=0).strftime("%Y%m%d%H")
-    timestamp = "2024083112"
+    timestamp = now.replace(hour=interval_start_hour, minute=0, second=0, microsecond=0).strftime("%Y%m%d%H")
+    # timestamp = "2024083112"
     print(f"Timestamp: {timestamp}")
 
     
@@ -20,9 +20,11 @@ def main():
     if download_success:
         # Step 2: Run the decoding file
         print("Running decoding...")
-        # station_codes_file = os.path.join(os.getenv('SHARED_STORAGE_PATH', '/data/shared'), "static", "WMO_stations_data.csv")
-        directory = os.path.join(os.getenv('SHARED_STORAGE_PATH', '/data/shared'), "Synop")
-        output_directory = os.path.join(os.getenv('SHARED_STORAGE_PATH', '/data/shared'), "Decoded_Data")
+
+        current_directory = os.getcwd()
+        print("Current working directory in main ",current_directory)
+        directory = os.path.join(current_directory,os.getenv('SHARED_STORAGE_PATH', '/data/shared'), "Synop")
+        output_directory = os.path.join(current_directory,os.getenv('SHARED_STORAGE_PATH', '/data/shared'), "Decoded_Data")
         station_codes_file = "static/WMO_stations_data.csv"
         # directory = 'Synop'
         # output_directory = "Decoded_Data"

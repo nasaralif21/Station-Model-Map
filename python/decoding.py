@@ -569,8 +569,10 @@ def process_synop_files(station_codes_file, directory, output_directory,timestam
     else:
         print(f"File {filename} does not exist in the directory {directory}")
 
-# station_codes_file = "E:/WMO/WMO_stations_data.csv"
-# directory = 'Synop'
-# output_directory = "Decoded_Data"
-# process_synop_files(station_codes_file, directory, output_directory,"2024083006")
-    
+# current_directory = os.getcwd()
+# shared_storage_path = os.path.join(current_directory, "data", "shared")
+# print("Current working directory in main ",current_directory)
+# directory = os.path.join(current_directory,shared_storage_path, "Synop")
+# output_directory = os.path.join(current_directory,shared_storage_path, "Decoded_Data")
+# station_codes_file = "static/WMO_stations_data.csv"
+# process_synop_files(station_codes_file, directory, output_directory, "2024083112")

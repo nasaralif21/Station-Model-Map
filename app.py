@@ -10,28 +10,42 @@ from metpy.plots import StationPlot, sky_cover, current_weather, pressure_tenden
 from scipy.spatial import cKDTree
 import io,os
 from datetime import datetime, timezone
-
+from dotenv import load_dotenv
+load_dotenv()
 
 # Use the Agg backend for Matplotlib
 import matplotlib
 matplotlib.use('Agg')
 
-shared_storage_path = os.getenv('SHARED_STORAGE_PATH', '/data/shared')
+current_directory = os.getcwd()
+print("Current Directory:", current_directory)
 
-# Set the path to the templates directory within the shared storage
-template_folder_path = os.path.join(shared_storage_path, 'templates')
-print(template_folder_path)
-# Initialize the Flask app with the custom template folder
+# Get the shared storage path from environment variables
+shared_storage_path =os.getenv('SHARED_STORAGE_PATH', '/data/shared')
+print("Shared Storage Path:", shared_storage_path)
+current_directory=current_directory+shared_storage_path
+print("Directory:", current_directory)
+
+# Construct the template folder path
+template_folder_path = os.path.join(current_directory, 'templates')
+print("Template Folder Path:", template_folder_path)
+
 app = Flask(__name__, template_folder=template_folder_path)
 # app = Flask(__name__,template_folder="templates")
 
 def read_data(time_stamp):
     try:
         # data_file = f"Decoded_Data/{time_stamp}.csv"
-        shared_storage_path = os.getenv('SHARED_STORAGE_PATH', '/data/shared')
+        
+        current_directory = os.getcwd()
+        print("Current Directory:", current_directory)
 
-        # Construct the full path to the data file
-        data_file = os.path.join(shared_storage_path, "Decoded_Data", f"{time_stamp}.csv")
+        # Get the shared storage path from environment variables
+        shared_storage_path =os.getenv('SHARED_STORAGE_PATH', '/data/shared')
+        print("Shared Storage Path:", shared_storage_path)
+        current_directory=current_directory+shared_storage_path
+        print("Directory:", current_directory)
+        data_file = os.path.join(current_directory, "Decoded_Data", f"{time_stamp}.csv")
         print(data_file)
         print(f"SHARED_STORAGE_PATH: {shared_storage_path}")
 
@@ -53,11 +67,19 @@ def home():
     print(timestamp)
     file_path = f"templates/{timestamp}12.html"
     print("File path in home method", file_path)
-    return render_template(f"{timestamp}00.html")
+    return render_template(f"{timestamp}12.html")
 
 @app.route('/list_html_files')
 def list_html_files():
-    template_dir = os.path.join(shared_storage_path, 'templates')
+    current_directory = os.getcwd()
+    print("Current Directory:", current_directory)
+
+    # Get the shared storage path from environment variables
+    shared_storage_path =os.getenv('SHARED_STORAGE_PATH', '/data/shared')
+    print("Shared Storage Path:", shared_storage_path)
+    current_directory=current_directory+shared_storage_path
+    print("Directory:", current_directory)
+    template_dir = os.path.join(current_directory, 'templates')
     print(template_dir)
     html_files = [f for f in os.listdir(template_dir) if f.endswith('.html')]
     return jsonify(html_files)
@@ -158,4 +180,4 @@ def generate_svg():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True,port=8000)
