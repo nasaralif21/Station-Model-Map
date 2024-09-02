@@ -67,13 +67,7 @@ def style_function(feature):
 
 def read_data(time_stamp):
     try:
-        
-        current_directory = os.getcwd()
-        shared_storage_path = os.path.join(current_directory, "data", "shared")
-        # Construct the full path to the data file
-        data_file = os.path.join(shared_storage_path,"Decoded_Data", f"{time_stamp}.csv")
-
-        # data_file = f"Decoded_Data/{time_stamp}.csv"
+        data_file = f"Decoded_Data/{time_stamp}.csv"
         data = pd.read_csv(data_file)
         return data
     except FileNotFoundError:
@@ -219,23 +213,9 @@ def generate_map(time_stamp):
     ).add_to(m)
 
     try:
-        current_directory = os.getcwd()
-        shared_storage_path = os.path.join(current_directory, "data", "shared")
-        template_dir_path = os.path.join(shared_storage_path, "templates")
-
-        if not os.path.exists(template_dir_path):
-            os.makedirs(template_dir_path)
-
-        file_path = os.path.join(template_dir_path, f"{time_stamp}.html")
-        # file_path = os.path.abspath(f"templates/{time_stamp}.html")
+        file_path = f"./templates/{time_stamp}.html"
         m.save(file_path)
         print("Map saved successfully.")
         print("File path:", file_path)
-        html_files = [f for f in os.listdir(template_dir_path) if f.endswith('.html')]
-        print("HTML files in the directory:")
-        for file in html_files:
-            print(file)
     except Exception as e:
         print(f"Error saving map: {e}")
-
-# generate_map("2024083112")

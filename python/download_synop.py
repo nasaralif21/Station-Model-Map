@@ -5,11 +5,7 @@ def download_file(timestamp):
 
     url = f"http://www.pmdnmcc.net/RealTime/Data/{timestamp}syn.txt"
 
-    # Use the shared storage path for saving the file
-    current_directory = os.getcwd()
-    shared_storage_path = os.path.join(current_directory, "data", "shared")
-    directory = os.path.join(current_directory,shared_storage_path, "Synop")
-    # directory = "Synop"
+    directory = "Synop"
     if not os.path.exists(directory):
         os.makedirs(directory)
 
@@ -28,4 +24,3 @@ def download_file(timestamp):
     else:
         print(f"Failed to download the file. Status code: {response.status_code}")
         return False
-

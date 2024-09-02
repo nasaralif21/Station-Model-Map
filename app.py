@@ -10,45 +10,29 @@ from metpy.plots import StationPlot, sky_cover, current_weather, pressure_tenden
 from scipy.spatial import cKDTree
 import io,os
 from datetime import datetime, timezone
-from dotenv import load_dotenv
-load_dotenv()
+
 
 # Use the Agg backend for Matplotlib
 import matplotlib
 matplotlib.use('Agg')
 
-current_directory = os.getcwd()
-print("Current Directory:", current_directory)
+app = Flask(__name__,template_folder="templates")
 
-# Get the shared storage path from environment variables
-shared_storage_path =os.getenv('SHARED_STORAGE_PATH', '/data/shared')
-print("Shared Storage Path:", shared_storage_path)
-current_directory=current_directory+shared_storage_path
-print("Directory:", current_directory)
-
-# Construct the template folder path
-template_folder_path = os.path.join(current_directory, 'templates')
-print("Template Folder Path:", template_folder_path)
-
-app = Flask(__name__, template_folder=template_folder_path)
-# app = Flask(__name__,template_folder="templates")
+def idw_interpolation(x, y, z, xi, yi, power=3, chunk_size=10000):
+    tree = cKDTree(np.c_[x, y])
+    zi = np.zeros(len(xi))
+    for i in range(0, len(xi), chunk_size):
+        xi_chunk = xi[i:i + chunk_size]
+        yi_chunk = yi[i:i + chunk_size]
+        distances, indices = tree.query(np.c_[xi_chunk, yi_chunk], k=len(x), p=2, workers=-1)
+        weights = 1 / (distances + 1e-12) ** power
+        weights /= weights.sum(axis=1)[:, np.newaxis]
+        zi[i:i + chunk_size] = np.sum(weights * z[indices], axis=1)
+    return zi
 
 def read_data(time_stamp):
     try:
-        # data_file = f"Decoded_Data/{time_stamp}.csv"
-        
-        current_directory = os.getcwd()
-        print("Current Directory:", current_directory)
-
-        # Get the shared storage path from environment variables
-        shared_storage_path =os.getenv('SHARED_STORAGE_PATH', '/data/shared')
-        print("Shared Storage Path:", shared_storage_path)
-        current_directory=current_directory+shared_storage_path
-        print("Directory:", current_directory)
-        data_file = os.path.join(current_directory, "Decoded_Data", f"{time_stamp}.csv")
-        print(data_file)
-        print(f"SHARED_STORAGE_PATH: {shared_storage_path}")
-
+        data_file = f"Decoded_Data/{time_stamp}.csv"
         data = pd.read_csv(data_file)
         return data
     except FileNotFoundError:
@@ -59,35 +43,22 @@ def read_data(time_stamp):
 
 @app.route("/")
 def home():
-    # now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc)
 
     now = datetime.now(timezone.utc)
-    # timestamp = now.strftime("%Y%m%d")
-    timestamp="20240831"
+    timestamp = now.strftime("%Y%m%d")
     print(timestamp)
-    file_path = f"templates/{timestamp}12.html"
-    print("File path in home method", file_path)
-    return render_template(f"{timestamp}12.html")
+    
+    return render_template(f"{timestamp}00.html")
 
 @app.route('/list_html_files')
 def list_html_files():
-    current_directory = os.getcwd()
-    print("Current Directory:", current_directory)
-
-    # Get the shared storage path from environment variables
-    shared_storage_path =os.getenv('SHARED_STORAGE_PATH', '/data/shared')
-    print("Shared Storage Path:", shared_storage_path)
-    current_directory=current_directory+shared_storage_path
-    print("Directory:", current_directory)
-    template_dir = os.path.join(current_directory, 'templates')
-    print(template_dir)
+    template_dir = os.path.join(app.root_path, 'templates')
     html_files = [f for f in os.listdir(template_dir) if f.endswith('.html')]
     return jsonify(html_files)
 
 @app.route('/<timestamp>')
 def serve_html(timestamp):
-    current_directory = os.getcwd()
-    print("Current Working Directory:", current_directory)
     return render_template(f'{timestamp}.html')
 
 @app.route("/getfile",methods=['GET'])
@@ -179,5 +150,49 @@ def generate_svg():
     return svg_data
 
 
+# @app.route('/get_station_data', methods=['GET'])
+# def get_station_data():
+#     lat = float(request.args.get('lat'))
+#     lon = float(request.args.get('lon'))
+#     print(lat,lon)
+#     filtered_data = data.drop_duplicates(subset='station_id')
+    
+#     # Apply the same filtering for NaNs
+#     valid_indices_temp = ~np.isnan(filtered_data['air_temp'])
+#     valid_indices_pressure = ~np.isnan(filtered_data['pressure_station_level'])
+#     valid_indices_wind = ~np.isnan(filtered_data['wind_speed']) & ~np.isnan(filtered_data['wind_direction'])
+    
+#     valid_indices = valid_indices_temp & valid_indices_pressure & valid_indices_wind
+#     filtered_data = filtered_data[valid_indices]
+    
+#     # Find the closest station to the provided lat/lon
+#     distances = np.sqrt((filtered_data['Latitude'] - lat)**2 + (filtered_data['Longitude'] - lon)**2)
+#     closest_index = np.argmin(distances)
+#     closest_station = filtered_data.iloc[closest_index]
+
+#     # Find the closest station
+#     latitude=closest_station['Latitude']
+#     longitude=closest_station['Longitude']
+#     air_temp = closest_station['air_temp']
+#     dew_point = closest_station['dew_point']
+#     cloud_cover = closest_station['cloud_cover']
+#     pressure = closest_station['pressure_station_level']
+#     wind_speed = closest_station['wind_speed']
+#     wind_dir = closest_station['wind_direction']
+#     station_name = closest_station['Station_Name']
+    
+#     station_data = {
+#         'latitude': latitude,
+#         'longitude': longitude,
+#         'temperature': air_temp,
+#         'pressure': pressure,
+#         'dew_point': dew_point,
+#         'wind_speed': wind_speed,
+#         'wind_direction': wind_dir,
+#         'cloud_cover': cloud_cover
+#     }
+    
+#     return jsonify(station_data)
+
 if __name__ == '__main__':
-    app.run(debug=True,port=8000)
+    app.run(debug=True)
