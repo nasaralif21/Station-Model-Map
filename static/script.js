@@ -4,6 +4,11 @@ var link = document.createElement("link");
 link.rel = "stylesheet";
 link.href = "/static/style.css";
 document.head.appendChild(link);
+
+var title = document.createElement("title");
+title.textContent = "Forecasting";
+document.head.appendChild(title);
+
 function onMarkerClick(code, time_stamp) {
   console.log({ time_stamp });
   fetch(
