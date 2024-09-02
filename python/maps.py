@@ -228,6 +228,10 @@ def generate_map(time_stamp):
         # m.save(file_path)
         print("Map saved successfully.")
         print("File path:", file_path)
+        html_files = [f for f in os.listdir(template_dir_path) if f.endswith('.html')]
+        print("HTML files in the directory:")
+        for file in html_files:
+            print(file)
     except Exception as e:
         print(f"Error saving map: {e}")
 

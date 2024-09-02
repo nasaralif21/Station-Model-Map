@@ -25,18 +25,6 @@ print(template_folder_path)
 app = Flask(__name__, template_folder=template_folder_path)
 # app = Flask(__name__,template_folder="templates")
 
-def idw_interpolation(x, y, z, xi, yi, power=3, chunk_size=10000):
-    tree = cKDTree(np.c_[x, y])
-    zi = np.zeros(len(xi))
-    for i in range(0, len(xi), chunk_size):
-        xi_chunk = xi[i:i + chunk_size]
-        yi_chunk = yi[i:i + chunk_size]
-        distances, indices = tree.query(np.c_[xi_chunk, yi_chunk], k=len(x), p=2, workers=-1)
-        weights = 1 / (distances + 1e-12) ** power
-        weights /= weights.sum(axis=1)[:, np.newaxis]
-        zi[i:i + chunk_size] = np.sum(weights * z[indices], axis=1)
-    return zi
-
 def read_data(time_stamp):
     try:
         # data_file = f"Decoded_Data/{time_stamp}.csv"
@@ -63,7 +51,7 @@ def home():
     # timestamp = now.strftime("%Y%m%d")
     timestamp="20240831"
     print(timestamp)
-    file_path = f"templates/{timestamp}00.html"
+    file_path = f"templates/{timestamp}12.html"
     print("File path in home method", file_path)
     return render_template(f"{timestamp}00.html")
 
@@ -76,6 +64,8 @@ def list_html_files():
 
 @app.route('/<timestamp>')
 def serve_html(timestamp):
+    current_directory = os.getcwd()
+    print("Current Working Directory:", current_directory)
     return render_template(f'{timestamp}.html')
 
 @app.route("/getfile",methods=['GET'])
