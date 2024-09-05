@@ -1,8 +1,8 @@
 from download_synop import download_file
 from decoding import process_synop_files
-from maps import generate_map
+from contours import generate_geojson
 from datetime import datetime, timedelta, timezone
-import time
+import time,os
 
 def main():
     now = datetime.now(timezone.utc)
@@ -12,7 +12,15 @@ def main():
     timestamp = now.replace(hour=interval_start_hour, minute=0, second=0, microsecond=0).strftime("%Y%m%d%H")
     
     print(f"Timestamp: {timestamp}")
-
+    json_file_path = f"contours_data/{timestamp}.geojson"  
+    print(json_file_path)
+    print(os.path.exists(json_file_path))
+    if os.path.exists(json_file_path):
+        print("Data already downloaded")
+        download_success = False
+    else:
+        print("Running download_synop...")
+        download_success = download_file(timestamp)
     
     print("Running download_synop...")
     download_success = download_file(timestamp)
@@ -25,8 +33,8 @@ def main():
         output_directory = "Decoded_Data"
         process_synop_files(station_codes_file, directory, output_directory, timestamp)
         
-        print("Running maps...")
-        generate_map(timestamp)
+        # print("Running maps...")
+        generate_geojson(timestamp)
     else:
         print("Data download failed. Will retry next hour.")
 

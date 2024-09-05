@@ -11,13 +11,6 @@
         "FLASK_ENV": "production"
       },
       "port": 8000
-    },
-    {
-      "name": "python-task",
-      "startCommand": "python python/main.py",
-      "env": {
-        "FLASK_ENV": "production"
-      }
     }
   ]
 }

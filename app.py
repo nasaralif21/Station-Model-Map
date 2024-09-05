@@ -7,8 +7,7 @@ from metpy.units import units
 from metpy.calc import wind_components
 from metpy.plots import StationPlot, sky_cover
 from metpy.plots import StationPlot, sky_cover, current_weather, pressure_tendency as pt_symbols
-from scipy.spatial import cKDTree
-import io,os
+import io,os,json
 from datetime import datetime, timezone
 
 
@@ -17,18 +16,6 @@ import matplotlib
 matplotlib.use('Agg')
 
 app = Flask(__name__,template_folder="templates")
-
-def idw_interpolation(x, y, z, xi, yi, power=3, chunk_size=10000):
-    tree = cKDTree(np.c_[x, y])
-    zi = np.zeros(len(xi))
-    for i in range(0, len(xi), chunk_size):
-        xi_chunk = xi[i:i + chunk_size]
-        yi_chunk = yi[i:i + chunk_size]
-        distances, indices = tree.query(np.c_[xi_chunk, yi_chunk], k=len(x), p=2, workers=-1)
-        weights = 1 / (distances + 1e-12) ** power
-        weights /= weights.sum(axis=1)[:, np.newaxis]
-        zi[i:i + chunk_size] = np.sum(weights * z[indices], axis=1)
-    return zi
 
 def read_data(time_stamp):
     try:
@@ -49,13 +36,52 @@ def home():
     timestamp = now.strftime("%Y%m%d")
     print(timestamp)
     
-    return render_template(f"{timestamp}00.html")
+    return render_template("index.html")
+@app.route('/api/geojson', methods=['GET'])
+def get_geojson():
+    time_stamp = request.args.get('timestamp', type=int)
+    print(f"Timestamp requested: {time_stamp}")
+    
+    json_path = f"contours_data/{time_stamp}.geojson"
+    
+    if not os.path.exists(json_path):
+        return jsonify({"error": "File not found"}), 404
+
+    try:
+        with open(json_path, 'r') as file:
+            data = json.load(file)
+    except json.JSONDecodeError:
+        return jsonify({"error": "Failed to decode JSON"}), 500
+    
+    return jsonify(data)
+
+@app.route('/api/temperature',methods=["GET"])
+def get_temperature_data():
+    time_stamp = request.args.get('timestamp', type=int)
+    
+    print(time_stamp)
+    
+    data=read_data(time_stamp)
+    data = data.dropna(subset=['air_temp'])
+    data = data.drop_duplicates(subset='station_id')
+    print(len(data))
+    lats = data['Latitude'].tolist()
+    lons = data['Longitude'].tolist()
+    air_temp = data['air_temp'].tolist()
+    stations = data['Station_Name'].tolist()
+    codes=data["station_id"].tolist()
+    # Combine the data into a list of dictionaries
+    response_data = [{'lat': lat, 'lon': lon, 'temp': temp,'station':station,"code":code} for lat, lon, temp,station,code in zip(lats, lons, air_temp,stations,codes)]
+    
+    # Return the combined data as JSON
+    return jsonify(response_data)
 
 @app.route('/list_html_files')
 def list_html_files():
-    template_dir = os.path.join(app.root_path, 'templates')
-    html_files = [f for f in os.listdir(template_dir) if f.endswith('.html')]
-    return jsonify(html_files)
+    geojson_dir = "contours_data"
+    geojson_files = [f for f in os.listdir(geojson_dir) if f.endswith('.geojson')]
+    return jsonify(geojson_files)
+
 
 @app.route('/<timestamp>')
 def serve_html(timestamp):
@@ -102,12 +128,13 @@ def generate_svg():
     weather_code = int(closest_station['present_weather']) if not np.isnan(closest_station['present_weather']) else None
     pressure_tendency = int(closest_station['tendency']) if not np.isnan(closest_station['tendency']) else None
     pressure_change = float(closest_station['pressure_change']) if not np.isnan(closest_station['pressure_change']) else None
-
+    Place = closest_station['Place_Name']
 
     # Create a station plot
-    fig = plt.figure(figsize=(3, 3), dpi=300)
+    fig = plt.figure(figsize=(2, 2), dpi=300)
     ax = fig.add_subplot(1, 1, 1)
-
+    # ax.axis('off')
+    
     station_plot = StationPlot(ax, lon, lat, fontsize=15, spacing=25)
 
     # Plot temperature if available
@@ -147,52 +174,28 @@ def generate_svg():
     svg_data = svg_buffer.getvalue()
     svg_buffer.close()
     
-    return svg_data
+    response_data = {
+        'station_id': station_id,
+        'timestamp': time_stamp,
+        'svg': svg_data,
+        'additional_data': {
+            'air_temp': air_temp,
+            'dew_point': dew_point,
+            'pressure': pressure,
+            'wind_speed_knots': wind_speed_knots,
+            'wind_dir': wind_dir,
+            'cloud_cover_value': cloud_cover_value,
+            'lat': round(lat, 3) ,
+            'lon': round(lon, 3) ,
+            'weather_code': weather_code,
+            'pressure_tendency': pressure_tendency,
+            'pressure_change': pressure_change,
+            'place_name':Place
+        }
+    }
+    
+    return jsonify(response_data)
 
-
-# @app.route('/get_station_data', methods=['GET'])
-# def get_station_data():
-#     lat = float(request.args.get('lat'))
-#     lon = float(request.args.get('lon'))
-#     print(lat,lon)
-#     filtered_data = data.drop_duplicates(subset='station_id')
-    
-#     # Apply the same filtering for NaNs
-#     valid_indices_temp = ~np.isnan(filtered_data['air_temp'])
-#     valid_indices_pressure = ~np.isnan(filtered_data['pressure_station_level'])
-#     valid_indices_wind = ~np.isnan(filtered_data['wind_speed']) & ~np.isnan(filtered_data['wind_direction'])
-    
-#     valid_indices = valid_indices_temp & valid_indices_pressure & valid_indices_wind
-#     filtered_data = filtered_data[valid_indices]
-    
-#     # Find the closest station to the provided lat/lon
-#     distances = np.sqrt((filtered_data['Latitude'] - lat)**2 + (filtered_data['Longitude'] - lon)**2)
-#     closest_index = np.argmin(distances)
-#     closest_station = filtered_data.iloc[closest_index]
-
-#     # Find the closest station
-#     latitude=closest_station['Latitude']
-#     longitude=closest_station['Longitude']
-#     air_temp = closest_station['air_temp']
-#     dew_point = closest_station['dew_point']
-#     cloud_cover = closest_station['cloud_cover']
-#     pressure = closest_station['pressure_station_level']
-#     wind_speed = closest_station['wind_speed']
-#     wind_dir = closest_station['wind_direction']
-#     station_name = closest_station['Station_Name']
-    
-#     station_data = {
-#         'latitude': latitude,
-#         'longitude': longitude,
-#         'temperature': air_temp,
-#         'pressure': pressure,
-#         'dew_point': dew_point,
-#         'wind_speed': wind_speed,
-#         'wind_direction': wind_dir,
-#         'cloud_cover': cloud_cover
-#     }
-    
-#     return jsonify(station_data)
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -1,85 +1,131 @@
-
 /* custom_styles.css */
 .custom-map-title {
-    font-size: 18px;
-    font-weight: bold;
-    text-align: center;
-    margin: 10px 0;
-    color: blue;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  margin: 10px 0;
+  color: blue;
 }
 
-.icon-container{
-    color: white; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    padding: 2px;
-    border-radius: 5px; 
-    width: 45px;
+.icon-container {
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  border-radius: 5px;
+  width: 45px;
 }
-
 .pressure-labels {
-    font-size: 12px;
-    cursor: marker;
-    background-color: gray;
-    color: white;
-    border-radius: 8px;
-    text-align: center;
+  font-size: 10px;
+  cursor: grab;
+  width: 28px;
+  text-align: center;
+  border-radius: 8px;
+  color: white;
+  background-color: gray;
 }
- .popup {
-       visibility: hidden;
-       opacity: 0;
-       width: 120px;
-       background-color: black;
-       color: white;
-       text-align: center;
-       border-radius: 6px;
-       padding: 5px;
-       position: absolute;
-       z-index: 1;
-       bottom: 125%;
-       left: 50%;
-       margin-left: -60px;
-       transition: opacity 0.3s;
-   }
- .marker-cluster {
-     display: block !important;
- }
- 
- .icon-container {
-     position: relative;
-     display: inline-block;
- }
- .icon-container:hover .popup {
-     visibility: visible;
-     opacity: 1;
- }
 
- .popup::after {
-     content: "";
-     position: absolute;
-     top: 100%;
-     left: 50%;
-     margin-left: -5px;
-     border-width: 5px;
-     border-style: solid;
-     border-color: black transparent transparent transparent;
- }
- .timestamp-selector {
-     position: absolute;
-     top: 100px;
-     left: 10px;
-     z-index: 1000;
-     background: white;
-     padding: 5px;
-     border-radius: 5px;
-     box-shadow: 0 0 5px rgba(0,0,0,0.5);
- }
- 
- .svg-container {
-     max-width: 100%;
- }
- .svg-container svg {
-     width: auto;
-     height: auto;
- }
+/* .pressure-labels {
+  font-size: 12px;
+  cursor: marker;
+  background-color: gray;
+  color: white;
+  border-radius: 8px;
+  text-align: center;
+} */
+.popup {
+  visibility: hidden;
+  opacity: 0;
+  width: 120px;
+  background-color: black;
+  color: white;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  margin-left: -60px;
+  transition: opacity 0.3s;
+}
+.marker-cluster {
+  display: block !important;
+}
+
+.icon-container {
+  position: relative;
+  display: inline-block;
+}
+.icon-container:hover .popup {
+  visibility: visible;
+  opacity: 1;
+}
+
+.popup::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: black transparent transparent transparent;
+}
+.timestamp-selector {
+  position: absolute;
+  top: 100px;
+  left: 10px;
+  z-index: 1000;
+  background: white;
+  padding: 5px;
+  border-radius: 5px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+.button {
+  position: absolute;
+  top: 170px;
+  left: 10px;
+  z-index: 1000;
+  background: white;
+  padding: 5px;
+  border-radius: 5px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+.time-selector {
+  position: absolute;
+  top: 135px;
+  left: 10px;
+  z-index: 1000;
+  background: white;
+  padding: 5px;
+  border-radius: 5px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+/* .selector-container {
+    background-color: #f0f0f0;
+    padding: 10px; 
+    border: 1px solid #ccc;
+    border-radius: 5px; 
+    display: inline-block; 
+  } */
+.svg-container {
+  max-width: 100%;
+}
+.svg-container svg {
+  width: auto;
+  height: auto;
+}
+
+.popup-content {
+  font-size: 15px !important;
+}
+.leaflet-popup {
+  left: -100px !important;
+  bottom: -4px !important;
+  width: 225px !important;
+}
