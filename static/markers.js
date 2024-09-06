@@ -54,6 +54,7 @@ function updateTimeSelector(date) {
 
   // Get times for the selected date
   var times = availableTimes[date] || [];
+  times.sort((a, b) => a.localeCompare(b));
   times.forEach((hour) => {
     var option = document.createElement("option");
     option.value = hour;

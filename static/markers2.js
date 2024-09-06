@@ -44,6 +44,7 @@ fetch("/list_html_files")
 function updateTimeSelector(date) {
   timeSelector.innerHTML = "";
   var times = availableTimes[date] || [];
+  times.sort((a, b) => a.localeCompare(b));
   times.forEach((hour) => {
     var option = document.createElement("option");
     option.value = hour;
