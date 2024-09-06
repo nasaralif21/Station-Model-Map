@@ -123,7 +123,7 @@ def generate_map(time_stamp):
 
     color_stops = list(zip(temperature_range, colors[:len(temperature_range)]))
 
-    def create_temp_icon(temp):
+    def create_temp_icon(temp,code, timestamp):
         color = color_stops[0][1]  # Default to the lowest color
         for threshold, color_value in color_stops:
             if temp >= threshold:
@@ -132,10 +132,10 @@ def generate_map(time_stamp):
                 break
     
         return f"""
-        <div class="icon-container" style="color: white; background-color: {color}; display: flex; align-items: center; justify-content: center; padding: 2px; border-radius: 5px; width: 45px;">
-            <div style="font-size: 12px; margin-left: 5px;">{temp}&deg;</div>
-        </div>
-        """
+            <div class="icon-container" style="background-color: {color};" onclick="onMarkerClick({code}, '{timestamp}')">
+                <div style="font-size: 12px; margin-left: 5px;">{temp}&deg;</div>
+            </div>
+            """
 
     m = folium.Map(location=[32, 72], zoom_start=5)
     m._name = 'map'
@@ -143,24 +143,18 @@ def generate_map(time_stamp):
 
     marker_cluster = MarkerCluster(name="Wind Data").add_to(m)
 
-    for lat, lon, speed, angle, temp, dew, cloud, station, code, pre in zip(lats, lons, wind_speed, wind_dir, air_temp, dew_point, cloud_cover, stations, codes, precep):
+    for lat, lon, temp, station, code in zip(lats, lons, air_temp, stations, codes):
         if not np.isnan(temp):
-            icon_html = create_temp_icon(temp)
+            icon_html = create_temp_icon(temp, code, time_stamp)
             popup_html = (
-                '<div>'
-                + '<b>Station (' + '{:.3f}'.format(lat) + ', ' + '{:.3f}'.format(lon) + ')</b><br>'
-                + 'Temp: ' + '{:.1f}'.format(temp) + '&deg;C<br>'
-                + 'Rain: ' + '{:.1f}'.format(pre) + 'mm<br>'
-                + 'Dew Point: ' + '{:.1f}'.format(dew) + '&deg;C<br>'
-                + 'Wind: ' + '{:.1f}'.format(speed) + ' knots<br>'
-                + '<button onclick="onMarkerClick(' + str(code) + ', \'' + time_stamp + '\')" id="show-model-' + str(code) + '">Show Station Model</button>'
-                + '<div id="model' + str(code) + '"></div>'
+                '<div class="popup-content" id="popup-content-' + str(code) + '">'
+                + '<span id="model' + str(code) + '"></div>'
                 + '</div>'
             )
             folium.Marker(
                 location=[lat, lon],
                 icon=folium.DivIcon(html=icon_html),
-                popup=folium.Popup(folium.Html(popup_html, script=True), max_width=800),
+                popup=folium.Popup(folium.Html(popup_html, script=True)),
                 tooltip=station
             ).add_to(marker_cluster)
         
@@ -171,46 +165,44 @@ def generate_map(time_stamp):
 
 
 
-    lat_arr = np.linspace(valid_lats.min(), valid_lats.max(), 1000)
-    lon_arr = np.linspace(valid_lons.min(), valid_lons.max(), 1000)
-    lat_grid, lon_grid = np.meshgrid(lat_arr, lon_arr)
-    lat_grid_flat, lon_grid_flat = lat_grid.flatten(), lon_grid.flatten()
+#     lat_arr = np.linspace(valid_lats.min(), valid_lats.max(), 1000)
+#     lon_arr = np.linspace(valid_lons.min(), valid_lons.max(), 1000)
+#     lat_grid, lon_grid = np.meshgrid(lat_arr, lon_arr)
+#     lat_grid_flat, lon_grid_flat = lat_grid.flatten(), lon_grid.flatten()
 
-    pressure_grid_flat = idw_interpolation(valid_lons, valid_lats, valid_pressure, lon_grid_flat, lat_grid_flat)
-    pressure_grid = pressure_grid_flat.reshape(lat_grid.shape)
+#     pressure_grid_flat = idw_interpolation(valid_lons, valid_lats, valid_pressure, lon_grid_flat, lat_grid_flat)
+#     pressure_grid = pressure_grid_flat.reshape(lat_grid.shape)
     
-    pressure_grid = sp.ndimage.gaussian_filter(pressure_grid, sigma=5)
-    
-    pressure_grid_masked = maskoceans(lon_grid, lat_grid, pressure_grid)
+#     pressure_grid = sp.ndimage.gaussian_filter(pressure_grid, sigma=5)
 
-    contours = plt.contour(lon_grid, lat_grid, pressure_grid, levels=30)
+#     contours = plt.contour(lon_grid, lat_grid, pressure_grid, levels=30)
 
-    contour_geojson = contours_to_geojson(contours)
+#     contour_geojson = contours_to_geojson(contours)
 
-    geojson_layer = GeoJson(
-        contour_geojson,
-        name='contours',
-        style_function=style_function,
-        popup=None
-    ).add_to(m)
+#     geojson_layer = GeoJson(
+#         contour_geojson,
+#         name='contours',
+#         style_function=style_function,
+#         popup=None
+#     ).add_to(m)
 
-    # Manually add labels to the map at varied positions
-    for feature in json.loads(contour_geojson)['features']:
-        add_labels_to_map(m, feature)
+#     # Manually add labels to the map at varied positions
+#     for feature in json.loads(contour_geojson)['features']:
+#         add_labels_to_map(m, feature)
 
-# Add high and low-pressure labels
-    min_point = np.unravel_index(np.argmin(pressure_grid), pressure_grid.shape)
-    max_point = np.unravel_index(np.argmax(pressure_grid), pressure_grid.shape)
+# # Add high and low-pressure labels
+#     min_point = np.unravel_index(np.argmin(pressure_grid), pressure_grid.shape)
+#     max_point = np.unravel_index(np.argmax(pressure_grid), pressure_grid.shape)
 
-    Marker(
-        location=[lat_grid[min_point], lon_grid[min_point]],
-        icon=DivIcon(html=f'<div style="font-size: 16px; color: red;">L</div>')
-    ).add_to(m)
+#     Marker(
+#         location=[lat_grid[min_point], lon_grid[min_point]],
+#         icon=DivIcon(html=f'<div style="font-size: 16px; color: red;">L</div>')
+#     ).add_to(m)
 
-    Marker(
-        location=[lat_grid[max_point], lon_grid[max_point]],
-        icon=DivIcon(html=f'<div style="font-size: 16px; color: blue;">H</div>')
-    ).add_to(m)
+#     Marker(
+#         location=[lat_grid[max_point], lon_grid[max_point]],
+#         icon=DivIcon(html=f'<div style="font-size: 16px; color: blue;">H</div>')
+#     ).add_to(m)
 
     try:
         file_path = f"./templates/{time_stamp}.html"
@@ -219,3 +211,5 @@ def generate_map(time_stamp):
         print("File path:", file_path)
     except Exception as e:
         print(f"Error saving map: {e}")
+
+generate_map("2024083012")

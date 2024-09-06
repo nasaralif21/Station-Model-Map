@@ -128,9 +128,6 @@ var pressureLabels = L.layerGroup(); // Layer group for pressure labels
 // Define the function to fetch data and add markers
 async function addTemperatureMarkers(timestamp) {
   try {
-    // Get the timestamp (you can modify this based on your requirements)
-    // timestamp = "2024083012"; // Example timestamp
-
     // Fetch the data from the API
     const response = await fetch(`/api/temperature?timestamp=${timestamp}`);
     const data = await response.json();

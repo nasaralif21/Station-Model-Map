@@ -126,6 +126,9 @@ def process_pressure_sea_level(decoded_synop):
 
     value = get_safe_value(decoded_synop, 'sea_level_pressure', 'value')
     unit = get_safe_value(decoded_synop, 'sea_level_pressure', 'unit')
+    if value is not None:
+        if value<400:
+            return None,None
     return value,unit
 
 def process_pressure_station_level(decoded_synop):
