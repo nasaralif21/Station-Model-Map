@@ -11,7 +11,7 @@ var utcDay = String(now.getUTCDate()).padStart(2, "0");
 var utcHours = String(now.getUTCHours()).padStart(2, "0");
 
 // var currenTime = `${utcYear}${utcMonth}${utcDay}00`;
-var currenTime="2024060500"
+var currenTime="2024090500"
 fetch("/list_html_files")
   .then((response) => response.json())
   .then((files) => {
