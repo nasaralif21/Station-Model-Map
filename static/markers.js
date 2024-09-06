@@ -11,7 +11,7 @@ var utcDay = String(now.getUTCDate()).padStart(2, "0");
 var utcHours = String(now.getUTCHours()).padStart(2, "0");
 
 // var currenTime = `${utcYear}${utcMonth}${utcDay}00`;
-var currenTime="2024090500"
+var currenTime = "2024090500";
 fetch("/list_html_files")
   .then((response) => response.json())
   .then((files) => {
@@ -110,17 +110,59 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 }).addTo(map);
 
 const colors = [
-  "rgb(149, 137, 211)", // Cool temperature color
-  "rgb(150, 209, 216)", // Slightly warm temperature color
-  "rgb(129, 204, 197)", // Warm temperature color
-  "rgb(103, 180, 186)", // Warmer
-  "rgb(95, 143, 197)", // Hot temperature color
-  "rgb(80, 140, 62)", // Hotter
-  "rgb(121, 146, 28)", // Very hot temperature color
-  "rgb(171, 161, 14)", // Extremely hot
-  "rgb(223, 177, 6)", // Scorching
-  "rgb(236, 95, 21)", // Burning hot
+  "rgb(149, 137, 211)",
+  "rgb(150, 209, 216)",
+  "rgb(129, 204, 197)",
+  "rgb(103, 180, 186)",
+  "rgb(95, 143, 197)",
+  "rgb(80, 140, 62)",
+  "rgb(121, 146, 28)",
+  "rgb(171, 161, 14)",
+  "rgb(223, 177, 6)",
+  "rgb(236, 95, 21)",
 ];
+
+// Helper to convert "rgb(r, g, b)" format to an array [r, g, b]
+function rgbStringToArray(rgbString) {
+  return rgbString
+    .replace(/[^\d,]/g, "") // Remove non-numeric characters
+    .split(",")
+    .map(Number); // Convert strings to numbers
+}
+
+// Helper to interpolate between two colors based on a factor
+function interpolateColor(color1, color2, factor) {
+  return [
+    Math.round(color1[0] + factor * (color2[0] - color1[0])),
+    Math.round(color1[1] + factor * (color2[1] - color1[1])),
+    Math.round(color1[2] + factor * (color2[2] - color1[2])),
+  ];
+}
+
+// Helper to convert an RGB array back to a string "rgb(r, g, b)"
+function rgbArrayToString(rgbArray) {
+  return `rgb(${rgbArray[0]}, ${rgbArray[1]}, ${rgbArray[2]})`;
+}
+
+// Get interpolated color based on temperature
+function getColor(temp, minTemp, maxTemp) {
+  // Normalize temperature into a range [0, 1]
+  const normalizedTemp = (temp - minTemp) / (maxTemp - minTemp);
+
+  // Determine which two colors to interpolate between
+  const colorStep = 1 / (colors.length - 1);
+  const lowerIndex = Math.floor(normalizedTemp / colorStep);
+  const upperIndex = Math.min(lowerIndex + 1, colors.length - 1);
+
+  const lowerColor = rgbStringToArray(colors[lowerIndex]);
+  const upperColor = rgbStringToArray(colors[upperIndex]);
+
+  // Interpolate between the two colors
+  const factor = (normalizedTemp - lowerIndex * colorStep) / colorStep;
+  const interpolatedColor = interpolateColor(lowerColor, upperColor, factor);
+
+  return rgbArrayToString(interpolatedColor);
+}
 
 var markers = new L.MarkerClusterGroup();
 var geoJsonLayer;
@@ -145,21 +187,21 @@ async function addTemperatureMarkers(timestamp) {
     );
 
     // Function to get the color based on temperature
-    function getColor(temp) {
-      for (let i = 0; i < temperatureRange.length; i++) {
-        if (temp <= temperatureRange[i]) {
-          return colors[i];
-        }
-      }
-      return colors[colors.length - 1]; // Fallback to the last color
-    }
+    // function getColor(temp) {
+    //   for (let i = 0; i < temperatureRange.length; i++) {
+    //     if (temp <= temperatureRange[i]) {
+    //       return colors[i];
+    //     }
+    //   }
+    //   return colors[colors.length - 1]; // Fallback to the last color
+    // }
     // Iterate through the data and add markers to the map
     data.forEach((item) => {
       const lat = item.lat;
       const lon = item.lon;
       const temp = item.temp;
       const station = item.station;
-      const color = getColor(temp);
+      const color = getColor(temp, minTemp, maxTemp);
       const code = item.code;
       // Create a custom icon (you can customize this)
       const iconHtml = `<div  class="icon-container" style="background-color: ${color}; ">
