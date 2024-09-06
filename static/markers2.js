@@ -108,6 +108,48 @@ const colors = [
   "rgb(236, 95, 21)",
 ];
 
+// Helper to convert "rgb(r, g, b)" format to an array [r, g, b]
+function rgbStringToArray(rgbString) {
+  return rgbString
+    .replace(/[^\d,]/g, "") // Remove non-numeric characters
+    .split(",")
+    .map(Number); // Convert strings to numbers
+}
+
+// Helper to interpolate between two colors based on a factor
+function interpolateColor(color1, color2, factor) {
+  return [
+    Math.round(color1[0] + factor * (color2[0] - color1[0])),
+    Math.round(color1[1] + factor * (color2[1] - color1[1])),
+    Math.round(color1[2] + factor * (color2[2] - color1[2])),
+  ];
+}
+
+// Helper to convert an RGB array back to a string "rgb(r, g, b)"
+function rgbArrayToString(rgbArray) {
+  return `rgb(${rgbArray[0]}, ${rgbArray[1]}, ${rgbArray[2]})`;
+}
+
+// Get interpolated color based on temperature
+function getColor(temp, minTemp, maxTemp) {
+  // Normalize temperature into a range [0, 1]
+  const normalizedTemp = (temp - minTemp) / (maxTemp - minTemp);
+
+  // Determine which two colors to interpolate between
+  const colorStep = 1 / (colors.length - 1);
+  const lowerIndex = Math.floor(normalizedTemp / colorStep);
+  const upperIndex = Math.min(lowerIndex + 1, colors.length - 1);
+
+  const lowerColor = rgbStringToArray(colors[lowerIndex]);
+  const upperColor = rgbStringToArray(colors[upperIndex]);
+
+  // Interpolate between the two colors
+  const factor = (normalizedTemp - lowerIndex * colorStep) / colorStep;
+  const interpolatedColor = interpolateColor(lowerColor, upperColor, factor);
+
+  return rgbArrayToString(interpolatedColor);
+}
+
 var markers = new L.MarkerClusterGroup();
 var geoJsonLayer;
 var pressureLabels = L.layerGroup();
@@ -115,7 +157,7 @@ var pressureLabels = L.layerGroup();
 async function addTemperatureMarkers(timestamp) {
   try {
     if (cachedData[timestamp] && cachedData[timestamp].temperature) {
-      updateTemperatureMarkers(cachedData[timestamp].temperature);
+      updateTemperatureMarkers(cachedData[timestamp].temperature, timestamp);
       return;
     }
     const response = await fetch(`/api/temperature?timestamp=${timestamp}`);
@@ -128,29 +170,21 @@ async function addTemperatureMarkers(timestamp) {
 }
 
 function updateTemperatureMarkers(data, timestamp) {
+  markers.clearLayers();
   const airTemps = data.map((item) => item.temp);
   const minTemp = Math.min(...airTemps);
   const maxTemp = Math.max(...airTemps);
   const temperatureRange = Array.from(
-    { length: colors.length },
-    (_, i) => minTemp + (i * (maxTemp - minTemp)) / (colors.length - 1)
+    { length: 7 },
+    (_, i) => minTemp + (i * (maxTemp - minTemp)) / (7 - 1)
   );
-
-  function getColor(temp) {
-    for (let i = 0; i < temperatureRange.length; i++) {
-      if (temp <= temperatureRange[i]) {
-        return colors[i];
-      }
-    }
-    return colors[colors.length - 1];
-  }
 
   data.forEach((item) => {
     const lat = item.lat;
     const lon = item.lon;
     const temp = item.temp;
     const station = item.station;
-    const color = getColor(temp);
+    const color = getColor(temp, minTemp, maxTemp);
     const code = item.code;
     const iconHtml = `<div class="icon-container" style="background-color: ${color};">
           <div style="font-size: 12px; text-align: center">${temp}&deg;</div>
@@ -194,6 +228,7 @@ function updateGeoJSONLayer(data) {
   if (geoJsonLayer) {
     map.removeLayer(geoJsonLayer);
   }
+  pressureLabels.clearLayers();
   geoJsonLayer = L.geoJSON(data, {
     style: function (feature) {
       return {
@@ -255,11 +290,12 @@ button.addEventListener("click", function () {
   var selected_time = timeSelector.value;
   var formattedDate = selected_data + selected_time;
   formattedDate = formattedDate.replace(/-/g, "");
+  currentTimestamp = formattedDate; // Update the current timestamp
   markers.clearLayers();
   if (geoJsonLayer) {
     map.removeLayer(geoJsonLayer);
   }
-  pressureLabels.clearLayers();
+  pressureLabels.clearLayers(); // Clear existing pressure labels
   fetchAndPlotGeoJSON(formattedDate);
   addTemperatureMarkers(formattedDate);
 });
