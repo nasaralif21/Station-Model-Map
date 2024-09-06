@@ -121,13 +121,13 @@ async function addTemperatureMarkers(timestamp) {
     const response = await fetch(`/api/temperature?timestamp=${timestamp}`);
     const data = await response.json();
     cachedData[timestamp] = { ...cachedData[timestamp], temperature: data };
-    updateTemperatureMarkers(data);
+    updateTemperatureMarkers(data, timestamp);
   } catch (error) {
     console.error("Error fetching or adding markers:", error);
   }
 }
-addTemperatureMarkers(currenTime);
-function updateTemperatureMarkers(data) {
+
+function updateTemperatureMarkers(data, timestamp) {
   const airTemps = data.map((item) => item.temp);
   const minTemp = Math.min(...airTemps);
   const maxTemp = Math.max(...airTemps);
@@ -249,7 +249,7 @@ function onMarkerClick(code, time_stamp) {
       console.error("Error fetching SVG data:", error);
     });
 }
-
+addTemperatureMarkers(currenTime);
 button.addEventListener("click", function () {
   var selected_data = timestampSelector.value;
   var selected_time = timeSelector.value;
