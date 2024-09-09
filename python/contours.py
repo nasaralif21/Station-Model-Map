@@ -62,7 +62,6 @@ def read_data(timestamp):
 def generate_geojson(timestamp):
     data=read_data(timestamp)
     data = data.drop_duplicates(subset='station_id')
-    print("Generating Geojson")
     lats = data['Latitude'].values
     lons = data['Longitude'].values  
     pressure = data['pressure_sea_level'].values
@@ -91,17 +90,3 @@ def generate_geojson(timestamp):
     with open(output_file, 'w') as f:
         json.dump(contour_geojson, f)
     print(f'GeoJSON saved to {output_file}')
-
-# geojson_dir = "Decoded_Data"
-# geojson_files = [os.path.splitext(f)[0] for f in os.listdir(geojson_dir) if f.endswith('.csv')]
-
-# for timestamp in geojson_files:
-#     json_file_path = f"contours_data/{timestamp}.geojson"  
-#     print(json_file_path)
-#     print(os.path.exists(json_file_path))
-#     if os.path.exists(json_file_path):
-#         print("Data already available")
-#     else:
-#         print("Running download_synop...")
-#         # download_success = download_file(timestamp)
-#         generate_geojson(timestamp)

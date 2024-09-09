@@ -572,3 +572,4 @@ def process_synop_files(station_codes_file, directory, output_directory,timestam
     else:
         print(f"File {filename} does not exist in the directory {directory}")
 
+    

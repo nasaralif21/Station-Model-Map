@@ -2,6 +2,7 @@ from download_synop import download_file
 from decoding import process_synop_files
 from contours import generate_geojson
 from datetime import datetime, timedelta, timezone
+from delete import delete_file
 import time,os
 
 def main():
@@ -10,34 +11,29 @@ def main():
     print(hour)
     interval_start_hour = (hour // 3) * 3
     timestamp = now.replace(hour=interval_start_hour, minute=0, second=0, microsecond=0).strftime("%Y%m%d%H")
-    
-    print(f"Timestamp: {timestamp}")
+    if str(hour)=="00":
+        delete_file("Decoded_Data")
+        delete_file("contours_data")
+        delete_file("Synop")
+
     json_file_path = f"contours_data/{timestamp}.geojson"  
-    print(json_file_path)
-    print(os.path.exists(json_file_path))
     if os.path.exists(json_file_path):
         print("Data already downloaded")
         download_success = False
     else:
         print("Running download_synop...")
         download_success = download_file(timestamp)
-    
-    print("Running download_synop...")
-    download_success = download_file(timestamp)
-    print(download_success)
+
     if download_success:
-        # Step 2: Run the decoding file
-        print("Running decoding...")
+        print("decoding...")
         station_codes_file = "static/WMO_stations_data.csv"
         directory = 'Synop'
         output_directory = "Decoded_Data"
         process_synop_files(station_codes_file, directory, output_directory, timestamp)
         
-        # print("Running maps...")
+        print("Generating Contours...")
         generate_geojson(timestamp)
-    else:
-        print("Data download failed. Will retry next hour.")
-
+    
 def schedule_task():
     while True:
         now = datetime.now(timezone.utc)

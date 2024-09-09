@@ -24,3 +24,4 @@ def download_file(timestamp):
     else:
         print(f"Failed to download the file. Status code: {response.status_code}")
         return False
+

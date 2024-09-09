@@ -8,10 +8,7 @@ from metpy.calc import wind_components
 from metpy.plots import StationPlot, sky_cover
 from metpy.plots import StationPlot, sky_cover, current_weather, pressure_tendency as pt_symbols
 import io,os,json
-from datetime import datetime, timezone
 
-
-# Use the Agg backend for Matplotlib
 import matplotlib
 matplotlib.use('Agg')
 
@@ -29,19 +26,11 @@ def read_data(time_stamp):
 
 
 @app.route("/")
-def home():
-    now = datetime.now(timezone.utc)
-
-    now = datetime.now(timezone.utc)
-    timestamp = now.strftime("%Y%m%d")
-    print(timestamp)
-    
+def home():    
     return render_template("index.html")
 @app.route('/api/geojson', methods=['GET'])
 def get_geojson():
     time_stamp = request.args.get('timestamp', type=int)
-    print(f"Timestamp requested: {time_stamp}")
-    
     json_path = f"contours_data/{time_stamp}.geojson"
     
     if not os.path.exists(json_path):
@@ -58,65 +47,41 @@ def get_geojson():
 @app.route('/api/temperature',methods=["GET"])
 def get_temperature_data():
     time_stamp = request.args.get('timestamp', type=int)
-    
-    print(time_stamp)
-    
+
     data=read_data(time_stamp)
     data = data.dropna(subset=['air_temp'])
     data = data.drop_duplicates(subset='station_id')
-    print(len(data))
     lats = data['Latitude'].tolist()
     lons = data['Longitude'].tolist()
     air_temp = data['air_temp'].tolist()
     stations = data['Station_Name'].tolist()
     codes=data["station_id"].tolist()
-    # Combine the data into a list of dictionaries
+    
     response_data = [{'lat': lat, 'lon': lon, 'temp': temp,'station':station,"code":code} for lat, lon, temp,station,code in zip(lats, lons, air_temp,stations,codes)]
     
-    # Return the combined data as JSON
     return jsonify(response_data)
 
-@app.route('/list_html_files')
+@app.route('/list_data_files')
 def list_html_files():
     geojson_dir = "contours_data"
     geojson_files = [f for f in os.listdir(geojson_dir) if f.endswith('.geojson')]
     return jsonify(geojson_files)
 
-
-@app.route('/<timestamp>')
-def serve_html(timestamp):
-    return render_template(f'{timestamp}.html')
-
-@app.route("/getfile",methods=['GET'])
-def get_timestamp_file():
-    timestamp = request.args.get('timestamp', type=int)
-    return render_template(f"{timestamp}.html")
-
 @app.route('/generate_svg', methods=['GET'])
 def generate_svg():
-    current_directory = os.getcwd()
-    print("Current Working Directory:", current_directory)
     station_id = request.args.get('code', type=int)
     time_stamp = request.args.get('timestamp', type=int)
-    print(station_id)
-    print(time_stamp)
-     # Load the data
     data=read_data(time_stamp)
 
-    # Drop duplicates
     data = data.drop_duplicates(subset='station_id')
 
-    # Find the station with the specified station_id
     station_data = data[data['station_id'] == station_id]
 
-    # Check if the station exists
     if station_data.empty:
         raise ValueError(f"No station found with station_id: {station_id}. Please check the data.")
 
-    # Extract the station's data
     closest_station = station_data.iloc[0]
     
-    # Extract parameters and handle missing values
     air_temp = float(closest_station['air_temp']) if not np.isnan(closest_station['air_temp']) else None
     dew_point = float(closest_station['dew_point']) if not np.isnan(closest_station['dew_point']) else None
     pressure = float(closest_station['pressure_sea_level']) if not np.isnan(closest_station['pressure_sea_level']) else None
@@ -137,7 +102,6 @@ def generate_svg():
     
     station_plot = StationPlot(ax, lon, lat, fontsize=15, spacing=25)
 
-    # Plot temperature if available
     # Plot temperature if available
     if air_temp is not None:
         station_plot.plot_parameter('NW', [air_temp], color='red')
@@ -195,7 +159,6 @@ def generate_svg():
     }
     
     return jsonify(response_data)
-
 
 if __name__ == '__main__':
     app.run(debug=True)
