@@ -20,12 +20,9 @@ var intervalStartHour = Math.floor(hour / 3) * 3;
 utcNow.setUTCHours(intervalStartHour, 0, 0, 0); // Set hour, minute, second, and millisecond to the interval start
 console.log(intervalStartHour);
 
-var timestamp = utcNow.toISOString().replace(/[-:T]/g, "").slice(0, 10); // Format as "YYYYMMDDHH"
+var timestamp = utcNow.toISOString().replace(/[-:T]/g, "").slice(0, 8); // Format as "YYYYMMDDHH"
 console.log(timestamp);
 
-// var currenTime = `${utcYear}${utcMonth}${utcDay}00`;
-const currenTime = timestamp;
-currentTimestamp = timestamp;
 fetch("/list_data_files")
   .then((response) => response.json())
   .then((files) => {
@@ -182,11 +179,24 @@ async function addTemperatureMarkers(timestamp) {
       return;
     }
     const response = await fetch(`/api/temperature?timestamp=${timestamp}`);
+    if (!response.ok) {
+      throw new Error("Temperature data not available");
+    }
     const data = await response.json();
+    if (!data || data.length === 0) {
+      throw new Error("Temperature data not available");
+    }
     cachedData[timestamp] = { ...cachedData[timestamp], temperature: data };
     updateTemperatureMarkers(data, timestamp);
   } catch (error) {
     console.error("Error fetching or adding markers:", error);
+    // alert(
+    //   "Temperature data not available for the selected timestamp. Displaying data for the first timestamp of the day."
+    // );
+    // Fallback to the first timestamp of the day
+    const fallbackTimestamp = timestamp.slice(0, 8) + "00"; // YYYYMMDD00
+    currentTimestamp = timestamp.slice(0, 8) + "00";
+    await addTemperatureMarkers(fallbackTimestamp);
   }
 }
 
@@ -229,19 +239,34 @@ timestampSelector.addEventListener("change", (event) => {
   updateTimeSelector(event.target.value);
 });
 
-function fetchAndPlotGeoJSON(timestamp) {
+async function fetchAndPlotGeoJSON(timestamp) {
   if (cachedData[timestamp] && cachedData[timestamp].geojson) {
     updateGeoJSONLayer(cachedData[timestamp].geojson);
     return;
   }
   fetch(`/api/geojson?timestamp=${timestamp}`)
-    .then((response) => response.json())
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("GeoJSON data not available");
+      }
+      return response.json();
+    })
     .then((data) => {
+      if (!data || Object.keys(data).length === 0) {
+        throw new Error("GeoJSON data not available");
+      }
       cachedData[timestamp] = { ...cachedData[timestamp], geojson: data };
       updateGeoJSONLayer(data);
     })
-    .catch((error) => {
+    .catch(async (error) => {
       console.error("Error fetching GeoJSON data:", error);
+      // alert(
+      //   "GeoJSON data not available for the selected timestamp. Displaying data for the first timestamp of the day."
+      // );
+      // Fallback to the first timestamp of the day
+      const fallbackTimestamp = timestamp.slice(0, 8) + "00"; // YYYYMMDD00
+      currentTimestamp = timestamp.slice(0, 8) + "00";
+      await fetchAndPlotGeoJSON(fallbackTimestamp);
     });
 }
 
@@ -305,8 +330,8 @@ function onMarkerClick(code, time_stamp) {
       console.error("Error fetching SVG data:", error);
     });
 }
-addTemperatureMarkers(currenTime);
-fetchAndPlotGeoJSON(currenTime);
+addTemperatureMarkers(timestamp);
+fetchAndPlotGeoJSON(timestamp);
 button.addEventListener("click", function () {
   var selected_data = timestampSelector.value;
   var selected_time = timeSelector.value;
