@@ -15,6 +15,7 @@ var now = new Date();
 var utcNow = new Date(now.toUTCString()); // Convert to UTC
 var hour = utcNow.getUTCHours();
 console.log(hour);
+console.log(hour);
 
 var intervalStartHour = Math.floor(hour / 3) * 3;
 utcNow.setUTCHours(intervalStartHour, 0, 0, 0); // Set hour, minute, second, and millisecond to the interval start
@@ -22,7 +23,7 @@ console.log(intervalStartHour);
 
 var timestamp = utcNow.toISOString().replace(/[-:T]/g, "").slice(0, 8); // Format as "YYYYMMDDHH"
 console.log(timestamp);
-
+timestamp = "2024090900";
 fetch("/list_data_files")
   .then((response) => response.json())
   .then((files) => {
@@ -102,16 +103,9 @@ var mapOptions = {
 };
 var map = L.map("map", mapOptions);
 
-// L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-//   maxZoom: 18,
-// }).addTo(map);
-L.tileLayer(
-  "https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png",
-  {
-    attribution:
-      '&copy; <a href="https://www.carto.com/attributions">CARTO</a>',
-  }
-).addTo(map);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 18,
+}).addTo(map);
 
 const colors = [
   "rgb(149, 137, 211)",
@@ -125,7 +119,7 @@ const colors = [
   "rgb(223, 177, 6)",
   "rgb(236, 95, 21)",
 ];
-
+let temperatureRange = [];
 // Helper to convert "rgb(r, g, b)" format to an array [r, g, b]
 function rgbStringToArray(rgbString) {
   return rgbString
@@ -168,7 +162,41 @@ function getColor(temp, minTemp, maxTemp) {
   return rgbArrayToString(interpolatedColor);
 }
 
-var markers = new L.MarkerClusterGroup();
+var markers = new L.MarkerClusterGroup({
+  iconCreateFunction: function (cluster) {
+    const markers = cluster.getAllChildMarkers();
+
+    let totalTemp = 0;
+    let count = 0;
+
+    // Loop through each marker to extract temperature
+    markers.forEach((marker) => {
+      const popup = marker.getPopup();
+      if (popup) {
+        const content = popup.getContent();
+        const tempMatch = content.match(/(\d+(\.\d+)?)&deg;/); // Match temperature
+        if (tempMatch) {
+          const temp = parseFloat(tempMatch[1]); // Convert to float
+          totalTemp += temp; // Accumulate temperature
+          count++; // Count valid temperatures
+        }
+      }
+    });
+
+    const avgTemp = (totalTemp / count).toFixed(2); // Calculate average
+    const color = getColor(
+      avgTemp,
+      Math.min(...temperatureRange),
+      Math.max(...temperatureRange)
+    );
+
+    return L.divIcon({
+      html: `<div class="cluster-icon" style="background-color: ${color};">${avgTemp}&deg;</div>`,
+      className: "custom-cluster-icon",
+      iconSize: L.point(40, 40),
+    });
+  },
+});
 var geoJsonLayer;
 var pressureLabels = L.layerGroup();
 
@@ -205,7 +233,7 @@ function updateTemperatureMarkers(data, timestamp) {
   const airTemps = data.map((item) => item.temp);
   const minTemp = Math.min(...airTemps);
   const maxTemp = Math.max(...airTemps);
-  const temperatureRange = Array.from(
+  temperatureRange = Array.from(
     { length: 7 },
     (_, i) => minTemp + (i * (maxTemp - minTemp)) / (7 - 1)
   );
@@ -227,7 +255,8 @@ function updateTemperatureMarkers(data, timestamp) {
     var marker = L.marker([lat, lon], { icon: icon })
       .bindTooltip(station)
       .addTo(markers);
-    marker.bindPopup(`<div id="popup-content-${code}">Loading...</div>`);
+    marker.bindPopup(`<div id="popup-content-${code}">${temp}&deg;</div>`);
+
     marker.on("click", () => {
       onMarkerClick(code, timestamp);
     });
