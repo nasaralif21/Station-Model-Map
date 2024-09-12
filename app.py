@@ -8,11 +8,19 @@ from metpy.calc import wind_components
 from metpy.plots import StationPlot, sky_cover
 from metpy.plots import StationPlot, sky_cover, current_weather, pressure_tendency as pt_symbols
 import io,os,json
+from flask_compress import Compress
+from flask_caching import Cache
+
+
 
 import matplotlib
 matplotlib.use('Agg')
 
 app = Flask(__name__,template_folder="templates")
+Compress(app)
+
+cache = Cache(app, config={'CACHE_TYPE': 'simple'})
+
 
 def read_data(time_stamp):
     try:
@@ -28,7 +36,9 @@ def read_data(time_stamp):
 @app.route("/")
 def home():    
     return render_template("index.html")
+
 @app.route('/api/geojson', methods=['GET'])
+@cache.cached(timeout=60, query_string=True)
 def get_geojson():
     time_stamp = request.args.get('timestamp', type=int)
     json_path = f"contours_data/{time_stamp}.geojson"
@@ -161,4 +171,4 @@ def generate_svg():
     return jsonify(response_data)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True,port=8000)
