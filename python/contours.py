@@ -95,31 +95,3 @@ def generate_geojson(timestamp):
         json.dump(contour_geojson, f)
     print(f'GeoJSON saved to {output_file}')
 
-def get_file_names_from_directory(directory):
-    file_names = []
-    try:
-        for filename in os.listdir(directory):
-            file_path = os.path.join(directory, filename)
-            if os.path.isfile(file_path):
-                file_names.append(filename)
-    except FileNotFoundError:
-        print(f"The directory {directory} does not exist.")
-    except PermissionError:
-        print(f"Permission denied to access the directory {directory}.")
-    return file_names
-
-def extract_timestamp_from_filename(filename):
-    match = re.search(r'\d{10}', filename)
-    if match:
-        return match.group()
-    else:
-        print(f"No valid timestamp found in filename: {filename}")
-        return None
-
-# Example usage
-decoded_data_directory = 'Decoded_Data'
-file_names = get_file_names_from_directory(decoded_data_directory)
-
-for filename in file_names:
-    timestamp = extract_timestamp_from_filename(filename)
-    generate_geojson(timestamp)
