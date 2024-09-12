@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from scipy.spatial import cKDTree
 import scipy as sp
 import json,os,random
-
+import re
 
 def idw_interpolation(x, y, z, xi, yi, power=3, chunk_size=10000):
     tree = cKDTree(np.c_[x, y])
@@ -12,7 +12,7 @@ def idw_interpolation(x, y, z, xi, yi, power=3, chunk_size=10000):
     for i in range(0, len(xi), chunk_size):
         xi_chunk = xi[i:i + chunk_size]
         yi_chunk = yi[i:i + chunk_size]
-        distances, indices = tree.query(np.c_[xi_chunk, yi_chunk], k=len(x), p=2, workers=-1)
+        distances, indices = tree.query(np.c_[xi_chunk, yi_chunk], k=min(10, len(x)), p=2, workers=-1)
         weights = 1 / (distances + 1e-12) ** power
         weights /= weights.sum(axis=1)[:, np.newaxis]
         zi[i:i + chunk_size] = np.sum(weights * z[indices], axis=1)
@@ -80,8 +80,12 @@ def generate_geojson(timestamp):
     pressure_grid = pressure_grid_flat.reshape(lat_grid.shape)
     
     pressure_grid = sp.ndimage.gaussian_filter(pressure_grid, sigma=5)
+    min_pressure = np.nanmin(pressure_grid)
+    max_pressure = np.nanmax(pressure_grid)
+    levels = np.arange(np.floor(min_pressure / 2) * 2, np.ceil(max_pressure / 2) * 2 + 1, 2)
     
-    contours = plt.contour(lon_grid, lat_grid, pressure_grid, levels=30)
+    # Create contours
+    contours = plt.contour(lon_grid, lat_grid, pressure_grid, levels=levels)
     output_dir = 'contours_data'
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -90,3 +94,32 @@ def generate_geojson(timestamp):
     with open(output_file, 'w') as f:
         json.dump(contour_geojson, f)
     print(f'GeoJSON saved to {output_file}')
+
+def get_file_names_from_directory(directory):
+    file_names = []
+    try:
+        for filename in os.listdir(directory):
+            file_path = os.path.join(directory, filename)
+            if os.path.isfile(file_path):
+                file_names.append(filename)
+    except FileNotFoundError:
+        print(f"The directory {directory} does not exist.")
+    except PermissionError:
+        print(f"Permission denied to access the directory {directory}.")
+    return file_names
+
+def extract_timestamp_from_filename(filename):
+    match = re.search(r'\d{10}', filename)
+    if match:
+        return match.group()
+    else:
+        print(f"No valid timestamp found in filename: {filename}")
+        return None
+
+# Example usage
+decoded_data_directory = 'Decoded_Data'
+file_names = get_file_names_from_directory(decoded_data_directory)
+
+for filename in file_names:
+    timestamp = extract_timestamp_from_filename(filename)
+    generate_geojson(timestamp)
