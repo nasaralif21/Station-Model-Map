@@ -21,9 +21,11 @@ var intervalStartHour = Math.floor(hour / 3) * 3;
 utcNow.setUTCHours(intervalStartHour, 0, 0, 0); // Set hour, minute, second, and millisecond to the interval start
 console.log(intervalStartHour);
 
-var timestamp = utcNow.toISOString().replace(/[-:T]/g, "").slice(0, 8); // Format as "YYYYMMDDHH"
+// var timestamp = utcNow.toISOString().replace(/[-:T]/g, "").slice(0, 10); // Format as "YYYYMMDDHH"
+var timestamp = "2024091400";
 console.log(timestamp);
-timestamp = "2024090900";
+currentTimestamp = timestamp;
+
 fetch("/list_data_files")
   .then((response) => response.json())
   .then((files) => {
@@ -165,11 +167,13 @@ function getColor(temp, minTemp, maxTemp) {
 var markers = new L.MarkerClusterGroup({
   iconCreateFunction: function (cluster) {
     const markers = cluster.getAllChildMarkers();
+    // console.log(markers);
 
     let totalTemp = 0;
     let count = 0;
 
     // Loop through each marker to extract temperature
+
     markers.forEach((marker) => {
       const popup = marker.getPopup();
       if (popup) {
@@ -177,6 +181,8 @@ var markers = new L.MarkerClusterGroup({
         const tempMatch = content.match(/(\d+(\.\d+)?)&deg;/); // Match temperature
         if (tempMatch) {
           const temp = parseFloat(tempMatch[1]); // Convert to float
+          // console.log(temp);
+
           totalTemp += temp; // Accumulate temperature
           count++; // Count valid temperatures
         }
@@ -201,6 +207,11 @@ var geoJsonLayer;
 var pressureLabels = L.layerGroup();
 
 async function addTemperatureMarkers(timestamp) {
+  markers.clearLayers();
+  if (geoJsonLayer) {
+    map.removeLayer(geoJsonLayer);
+  }
+  pressureLabels.clearLayers();
   try {
     if (cachedData[timestamp] && cachedData[timestamp].temperature) {
       updateTemperatureMarkers(cachedData[timestamp].temperature, timestamp);
@@ -288,13 +299,9 @@ async function fetchAndPlotGeoJSON(timestamp) {
       updateGeoJSONLayer(data);
     })
     .catch(async (error) => {
-      console.error("Error fetching GeoJSON data:", error);
-      // alert(
-      //   "GeoJSON data not available for the selected timestamp. Displaying data for the first timestamp of the day."
-      // );
-      // Fallback to the first timestamp of the day
       const fallbackTimestamp = timestamp.slice(0, 8) + "00"; // YYYYMMDD00
       currentTimestamp = timestamp.slice(0, 8) + "00";
+      updateCurrentTimestamp();
       await fetchAndPlotGeoJSON(fallbackTimestamp);
     });
 }
@@ -345,7 +352,7 @@ function onMarkerClick(code, time_stamp) {
         var updatedContent = `
           <b>${additionalData.place_name}</b><br>
           Temp: ${additionalData.air_temp ?? "N/A"}&deg;C<br>
-          Pressure: ${additionalData.pressure ?? "N/A"} hpa<br>
+          Station Pressure: ${additionalData.pressure ?? "N/A"} hpa<br>
           Dew Point: ${additionalData.dew_point ?? "N/A"}&deg;C<br>
           Wind: ${additionalData.wind_speed_knots ?? "N/A"} knots<br>
           <div class="svg-container">${svgData}</div>
@@ -362,16 +369,16 @@ function onMarkerClick(code, time_stamp) {
 addTemperatureMarkers(timestamp);
 fetchAndPlotGeoJSON(timestamp);
 button.addEventListener("click", function () {
-  var selected_data = timestampSelector.value;
-  var selected_time = timeSelector.value;
-  var formattedDate = selected_data + selected_time;
-  formattedDate = formattedDate.replace(/-/g, "");
-  currentTimestamp = formattedDate; // Update the current timestamp
   markers.clearLayers();
   if (geoJsonLayer) {
     map.removeLayer(geoJsonLayer);
   }
   pressureLabels.clearLayers(); // Clear existing pressure labels
+  var selected_data = timestampSelector.value;
+  var selected_time = timeSelector.value;
+  var formattedDate = selected_data + selected_time;
+  formattedDate = formattedDate.replace(/-/g, "");
+  currentTimestamp = formattedDate; // Update the current timestamp
   addTemperatureMarkers(formattedDate);
   fetchAndPlotGeoJSON(formattedDate);
 });

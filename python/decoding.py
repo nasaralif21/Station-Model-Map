@@ -1,4 +1,4 @@
-import os
+import os,math
 from pymetdecoder import synop as s
 import pandas as pd
 
@@ -122,7 +122,31 @@ def process_wind_direction(decoded_synop):
 
 def process_pressure_sea_level(decoded_synop):
     if not isinstance(decoded_synop, dict) or 'sea_level_pressure' not in decoded_synop:
-        return None,None   
+        g = 9.80665  # Gravity (m/s^2)
+        Rd = 287.0   # Specific gas constant for dry air (J/kg·K)
+    
+        surface, surface_unit = process_geopotential(decoded_synop)
+        height, height_unit = process_height(decoded_synop)
+        temperature = process_all_temperatures(decoded_synop)
+        
+        # Check if any of the values are None
+        if surface is None or height is None or temperature is None:
+            return None, None
+        
+        air_temp = temperature.get('air_temperature', [None])[0]
+        
+        # Check if air_temp is None
+        if air_temp is None:
+            return None, None
+        
+        air_temp_kelvin = air_temp + 273.15
+        surface = surface * 100
+        exponent = (g * height) / (Rd * air_temp_kelvin)
+        value = surface * math.exp(exponent)
+        value = value / 100
+        value = round(value, 1)
+        return value, surface_unit
+        
 
     value = get_safe_value(decoded_synop, 'sea_level_pressure', 'value')
     unit = get_safe_value(decoded_synop, 'sea_level_pressure', 'unit')
@@ -571,5 +595,3 @@ def process_synop_files(station_codes_file, directory, output_directory,timestam
             print(f"Error processing file {filename}: {e}")
     else:
         print(f"File {filename} does not exist in the directory {directory}")
-
-    

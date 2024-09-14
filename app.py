@@ -11,8 +11,6 @@ import io,os,json
 from flask_compress import Compress
 from flask_caching import Cache
 
-
-
 import matplotlib
 matplotlib.use('Agg')
 
@@ -95,6 +93,7 @@ def generate_svg():
     air_temp = float(closest_station['air_temp']) if not np.isnan(closest_station['air_temp']) else None
     dew_point = float(closest_station['dew_point']) if not np.isnan(closest_station['dew_point']) else None
     pressure = float(closest_station['pressure_sea_level']) if not np.isnan(closest_station['pressure_sea_level']) else None
+    pressure_station = float(closest_station['pressure_station_level']) if not np.isnan(closest_station['pressure_station_level']) else None
     wind_speed_knots = float(closest_station['wind_speed']) if not np.isnan(closest_station['wind_speed']) else None
     wind_dir = float(closest_station['wind_direction']) if not np.isnan(closest_station['wind_direction']) else None
     cloud_cover_value = int(round(closest_station['cloud_cover'])) if not np.isnan(closest_station['cloud_cover']) else None
@@ -155,7 +154,7 @@ def generate_svg():
         'additional_data': {
             'air_temp': air_temp,
             'dew_point': dew_point,
-            'pressure': pressure,
+            'pressure': pressure_station,
             'wind_speed_knots': wind_speed_knots,
             'wind_dir': wind_dir,
             'cloud_cover_value': cloud_cover_value,

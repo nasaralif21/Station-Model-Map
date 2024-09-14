@@ -24,4 +24,7 @@ def download_file(timestamp):
     else:
         print(f"Failed to download the file. Status code: {response.status_code}")
         return False
-
+# a=["00","03","06","09","12","15","18","21"]
+# for x in a:
+#     download_file(f"20240906{x}")
+# download_file("20240")

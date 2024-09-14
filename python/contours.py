@@ -95,3 +95,8 @@ def generate_geojson(timestamp):
         json.dump(contour_geojson, f)
     print(f'GeoJSON saved to {output_file}')
 
+# geojson_dir = "Decoded_Data"
+# geojson_files = [os.path.splitext(f)[0] for f in os.listdir(geojson_dir) if f.endswith('.csv')]
+
+# for timestamp in geojson_files:
+#     generate_geojson(timestamp)
