@@ -6,7 +6,7 @@
   "services": [
     {
       "name": "web",
-      "startCommand": "gunicorn app:app",
+      "startCommand": "sh -c "python app.py & python python/main.py"",
       "env": {
         "FLASK_ENV": "production"
       },
