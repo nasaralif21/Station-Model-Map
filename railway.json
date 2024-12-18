@@ -1,17 +1,9 @@
 {
   "build": {
-    "builder": "python",
+    "builder": "python/python3",
     "buildCommand": "pip install -r requirements.txt"
   },
   "deploy": {
     "startCommand": "sh -c \"python app.py & python python/main.py\""
-  },
-  "services": [
-    {
-      "name": "flask-app",
-      "envVars": {
-        "PORT": "5000"
-      }
-    }
-  ]
+  }
 }
