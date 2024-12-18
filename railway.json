@@ -1,16 +1,17 @@
 {
   "build": {
-    "builder": "Nixpacks",
+    "builder": "python",
     "buildCommand": "pip install -r requirements.txt"
+  },
+  "deploy": {
+    "startCommand": "sh -c \"python app.py & python python/main.py\""
   },
   "services": [
     {
-      "name": "web",
-      "start": "sh -c \"python app.py & python python/main.py\"",
-      "env": {
-        "FLASK_ENV": "production"
-      },
-      "port": 8000
+      "name": "flask-app",
+      "envVars": {
+        "PORT": "5000"
+      }
     }
   ]
 }
