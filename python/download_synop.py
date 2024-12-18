@@ -3,7 +3,7 @@ import requests
 
 def download_file(timestamp):
 
-    url = f"http://www.pmdnmcc.net/RealTime/Data/{timestamp}syn.txt"
+    url = f"http://www.pmdnmcc.net/websites/RealTime/Data/{timestamp}syn.txt"
 
     directory = "Synop"
     if not os.path.exists(directory):
